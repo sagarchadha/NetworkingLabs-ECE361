@@ -16,7 +16,7 @@
 
 #include "packet.h"
 
-#define MAXLEN 1000 //Possibly change to 1100
+#define MAXLEN 1100 //Possibly change to 1100
 
 int main(int argc, char const *argv[]){
     //Arguments include server and the port number
@@ -82,9 +82,8 @@ int main(int argc, char const *argv[]){
     
     //***************Part 2,3 of the Lab*******************
     FILE* filePointer;
-    //int fileFlag = 1;
-    
-    while(1) {
+    int flag = 1;
+    while(flag) {
         //Receiving message from client
         int bytesReceived = recvfrom(socketDescriptor, message_buffer, MAXLEN, 0, (struct sockaddr*) &clientAddress, &clientMessageLength);
         message_buffer[bytesReceived] = '\0';
@@ -97,23 +96,28 @@ int main(int argc, char const *argv[]){
         char* fileName = currentPacket->fileName;
         char* fileData = currentPacket->fileData;
         printf("Received Packet %d\n", fragmentNumber);
+//        printf("Total: %d\n", totalFragments);
+//        printf("File: %s\n", fileName);
+//        printf("Data: %s\n", fileData);
         
-        //First fragment should open the file and begin to write data
-        if(fragmentNumber == 1)
-            filePointer = fopen(fileName, 'wb');
+        if (fragmentNumber == totalFragments) flag = 0;
+        //First fragment should open the file and begin to write data in binary
+        if(fragmentNumber == 1) {
+            filePointer = fopen(fileName, "wb");
+            printf("Opening File\n");
+        }
         fwrite(fileData, 1, fragmentSize, filePointer);
-        
+
         //Sending an acknowledge response
         if (sendto(socketDescriptor, "ACK", strlen("ACK"), 0, (struct sockaddr*) &clientAddress, clientMessageLength) == -1) {
             fprintf(stderr, "Acknowledgement message not sent to client\n");
             exit(1);
         }
-        
+
         //Freeing the current packet pointer
         free(currentPacket);
-        
+        printf("Freed Packet %d\n", fragmentNumber);
         //Reached the end of the fragments
-        if (fragmentNumber == totalFragments) break;
     }
     fclose(filePointer);
     
