@@ -38,15 +38,15 @@ void printPacket(struct packet * p);
 void printAllPackets(struct packet * p);
 
 //Creates the linked list of packets based on the file
-struct packet * fragment_file(char * filename);
+struct packet * fragmentFile(char * file);
 
 //Frees the memory that was used for the linked list
 void freePackets(struct packet * root);
 
 //Converting the packet to a string format for sending
-char * condense_packet(struct packet * pack, int * len);
+char * condensePacket(struct packet * pack, int * len);
 
 //Converting the packet to its individual elements from string format
-struct packet * extract_packet(char * packet_str);
+struct packet * extractPacket(char * packet_str);
 
 #endif

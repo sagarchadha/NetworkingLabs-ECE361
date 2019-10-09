@@ -16,10 +16,10 @@
 
 #include "packet.h"
 
-#define MAXLEN 1100 //Possibly change to 1100
+#define MAXLEN 1000
 
+//Arguments include server and the port number
 int main(int argc, char const *argv[]){
-    //Arguments include server and the port number
     
     //Obtaining port from argument
     int port;
@@ -80,7 +80,7 @@ int main(int argc, char const *argv[]){
         }
     }
     
-    //***************Part 2,3 of the Lab*******************
+    //Receiving the file
     FILE* filePointer;
     int flag = 1;
     while(flag) {
@@ -89,7 +89,7 @@ int main(int argc, char const *argv[]){
         message_buffer[bytesReceived] = '\0';
         
         //Creating the packet and extracting the message into packets
-        struct packet* currentPacket = extract_packet(message_buffer);
+        struct packet* currentPacket = extractPacket(message_buffer);
         int totalFragments = currentPacket->totalFragments;
         int fragmentNumber = currentPacket->fragmentNumber;
         int fragmentSize = currentPacket->fragmentSize;
@@ -116,9 +116,12 @@ int main(int argc, char const *argv[]){
 
         //Freeing the current packet pointer
         free(currentPacket);
-        printf("Freed Packet %d\n", fragmentNumber);
-        //Reached the end of the fragments
+        //printf("Freed Packet %d\n", fragmentNumber);
     }
+    
+    printf("File has been received\n");
+    
+    //Closing the file
     fclose(filePointer);
     
     //Closes socket

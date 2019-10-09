@@ -26,28 +26,28 @@ void printAllPackets(struct packet * p){
     }
 }
 
-
-struct packet * fragment_file(char * filename){
+//Dissects the file and puts the data into a linked list of packets
+struct packet * fragmentFile(char * file){
     //Initializing vriables
     FILE * filePointer;
-    int num_bytes, total_frag, size, frag_no;
+    int total_bytes, total_frag, size, frag_no;
     char data[FRAGMENTSIZE];
     struct packet * root_packet, * prev_packet;
     
     //Opens the file in read-mode and binary form
-    filePointer = fopen(filename, "rb");
+    filePointer = fopen(file, "rb");
     
     //Determining total number of bytes in the file
     //By reading the file entirely, then going back to the start
     fseek(filePointer, 0, SEEK_END);
-    num_bytes = ftell(filePointer);
+    total_bytes = ftell(filePointer);
     fseek(filePointer, 0, SEEK_SET);
     
     //Determining the total number of fragments
-    total_frag = (num_bytes/FRAGMENTSIZE) + 1;
+    total_frag = (total_bytes/FRAGMENTSIZE) + 1;
     
     //Creating the linked list of packets so they are connected to each other
-    for (frag_no=1; frag_no<=total_frag; frag_no++) {
+    for (frag_no = 1; frag_no <= total_frag; frag_no++) {
         //Allocating memory for a new packet
         struct packet * new_packet = malloc(sizeof(struct packet));
         
@@ -66,7 +66,7 @@ struct packet * fragment_file(char * filename){
         new_packet->totalFragments = total_frag;
         new_packet->fragmentNumber = frag_no;
         new_packet->fragmentSize = size;
-        new_packet->fileName = filename;
+        new_packet->fileName = file;
         //Using memcpy to copy the block of memory
         memcpy(new_packet->fileData, data, size);
         //Adding a null at the end of the linked list
@@ -103,7 +103,7 @@ void freePackets(struct packet * root){
 }
 
 //Converting the packet to a string format for sending
-char * condense_packet(struct packet * pack, int * len){
+char * condensePacket(struct packet * pack, int * len){
     //Finding the size of each element to allocate spaace
     int s1 = snprintf(NULL, 0, "%d", pack->totalFragments);
     int s2 = snprintf(NULL, 0, "%d", pack->fragmentNumber);
@@ -129,7 +129,7 @@ char * condense_packet(struct packet * pack, int * len){
 }
 
 //Converting the packet to its individual elements from string format
-struct packet * extract_packet(char * packet_str){
+struct packet * extractPacket(char * packet_str){
     //Declaring variables
     struct packet * extractedPacket;
     char *total_frag_str, *frag_no_str, *size_str, *filename, *filedata;
@@ -146,13 +146,13 @@ struct packet * extract_packet(char * packet_str){
     frag_no = atoi(frag_no_str);
     size = atoi(size_str);
     
-    //Obtaining the size for the UDP header
-    int udp_header_size = strlen(total_frag_str) + strlen(frag_no_str) +
+    //Obtaining the size for the TCP header
+    int tcp_header_size = strlen(total_frag_str) + strlen(frag_no_str) +
     strlen(size_str) + strlen(filename) + 4;
     
     //Transferring the file data from the string format into bits
     filedata = malloc(size*sizeof(char));
-    memcpy(filedata, &packet_str[udp_header_size], size);
+    memcpy(filedata, &packet_str[tcp_header_size], size);
     
     //Setting all of the packet details to its corresponding members
     extractedPacket = malloc(sizeof(struct packet));
