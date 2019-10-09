@@ -80,6 +80,8 @@ int main(int argc, char const *argv[]){
     int bytesRecveived;
 
     //Sending ftp response to the server
+    clock_t start, end;
+    start = clock();
     ftpResponse = "ftp";
     sendto(socketDescriptor, ftpResponse, strlen(ftpResponse), 0, serverAddress->ai_addr, serverAddress->ai_addrlen);
 
@@ -89,17 +91,18 @@ int main(int argc, char const *argv[]){
     
     //Adding \0 for string comparison
     messageReceived[bytesRecveived] = '\0';
-
+    
+    end = clock();
+    printf("RTT: %f\n", ((double) (end - start) / CLOCKS_PER_SEC));
     //Checking the message from the server
     if (strcmp(messageReceived, "yes") == 0) {
         printf("A file transfer can start.\n");
     }
     
-    //*********Sending Packets**********
+    //Beginning File Transfer and Sending of Packets
     struct packet* rootPacket = fragment_file(fileName);
     struct packet* currentPacket = rootPacket;
     int length;
-    
     
     while(currentPacket != NULL) {
         char* condensedPacket = condense_packet(currentPacket, &length);
@@ -116,7 +119,7 @@ int main(int argc, char const *argv[]){
         //Checking to see if the packets have been acknowledged
         if (strcmp(messageReceived, "ACK") != 0)
             continue;
-        printf("Packet %d has been sent.\n", currentPacket->fragmentNumber);
+        printf("Packet %d has acknowledged by the server.\n", currentPacket->fragmentNumber);
         
         //Go to next packet in the the linked list and free the current packet
         currentPacket = currentPacket->nextPacket;

@@ -10,13 +10,13 @@
 #define PACKET_H
 
 #include <stdio.h>
+#include <stdlib.h> 
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>     //includes sockaddr
 #include <netdb.h>          //includes addrinfo
-#include <arpa/inet.h>      //includes inet_ntop etc...
+#include <arpa/inet.h>      //includes inet_ntop
 #include <unistd.h>         //includes close()
-#include <stdlib.h>         //includes exit(1)
 #include <errno.h>
 #include <time.h>
 
