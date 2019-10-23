@@ -1,6 +1,6 @@
 //
 //  server.c
-//  FileTransferLab1
+//  FileTransferLab2
 //
 //  Created by Sagar Chadha & Pratiksha Shenoy on 2019-09-24.
 //  Copyright © 2019 Sagar Chadha & Pratiksha Shenoy. All rights reserved.
@@ -16,10 +16,10 @@
 
 #include "packet.h"
 
-#define MAXLEN 1000
+#define MAXLEN 1100 //Possibly change to 1100
 
-//Arguments include server and the port number
 int main(int argc, char const *argv[]){
+    //Arguments include server and the port number
     
     //Obtaining port from argument
     int port;
@@ -80,7 +80,7 @@ int main(int argc, char const *argv[]){
         }
     }
     
-    //Receiving the file
+    //***************Part 2,3 of the Lab*******************
     FILE* filePointer;
     int flag = 1;
     while(flag) {
@@ -96,9 +96,9 @@ int main(int argc, char const *argv[]){
         char* fileName = currentPacket->fileName;
         char* fileData = currentPacket->fileData;
         printf("Received Packet %d\n", fragmentNumber);
-//        printf("Total: %d\n", totalFragments);
-//        printf("File: %s\n", fileName);
-//        printf("Data: %s\n", fileData);
+        //        printf("Total: %d\n", totalFragments);
+        //        printf("File: %s\n", fileName);
+        //        printf("Data: %s\n", fileData);
         
         if (fragmentNumber == totalFragments) flag = 0;
         //First fragment should open the file and begin to write data in binary
@@ -107,21 +107,18 @@ int main(int argc, char const *argv[]){
             printf("Opening File\n");
         }
         fwrite(fileData, 1, fragmentSize, filePointer);
-
+        
         //Sending an acknowledge response
         if (sendto(socketDescriptor, "ACK", strlen("ACK"), 0, (struct sockaddr*) &clientAddress, clientMessageLength) == -1) {
             fprintf(stderr, "Acknowledgement message not sent to client\n");
             exit(1);
         }
-
+        
         //Freeing the current packet pointer
         free(currentPacket);
-        //printf("Freed Packet %d\n", fragmentNumber);
+        printf("Freed Packet %d\n", fragmentNumber);
+        //Reached the end of the fragments
     }
-    
-    printf("File has been received\n");
-    
-    //Closing the file
     fclose(filePointer);
     
     //Closes socket

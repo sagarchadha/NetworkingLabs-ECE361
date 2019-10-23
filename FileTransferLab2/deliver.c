@@ -22,7 +22,7 @@
 
 int main(int argc, char const *argv[]){
     int port;
-
+    
     //Obtaining port number from argument
     switch(argc) {
         case 3:
@@ -39,25 +39,25 @@ int main(int argc, char const *argv[]){
     printf("Enter filename to transfer in the format: ftp <filename>\n");
     char ftpInput[50], fileName[50];
     scanf("%s %s", ftpInput, fileName);
-
+    
     //Checking the input for ftp
     if(strcmp(ftpInput, "ftp")!= 0){
         printf("Invalid Command: %s\n", ftpInput);
         exit(0);
     }
-
+    
     //Finding the file
     if(access(fileName, F_OK) != 0){
         fprintf(stderr, "File not found\n");
         exit(0);
     }
-
+    
     //Setting up the variables
     int status, socketDescriptor;
     struct addrinfo hints;
     struct addrinfo *serverAddress;
     struct sockaddr_storage serverSocketAddress;     //connector's addr info
-
+    
     //Fills memory with value
     memset(&hints, 0, sizeof hints);
     
@@ -68,17 +68,17 @@ int main(int argc, char const *argv[]){
     
     //Obtains address info of the server
     status = getaddrinfo(ipAddress, portPointer, &hints, &serverAddress);
-
+    
     //Creating the UDP socket
     if ((socketDescriptor = socket(serverAddress->ai_family,serverAddress->ai_socktype, serverAddress->ai_protocol)) == -1) {
         fprintf(stderr, "Error with socket\n");
         exit(1);
     }
-
+    
     //message variables
     char messageReceived[MAXLEN], *ftpResponse;
     int bytesRecveived;
-
+    
     //Beginning the clock to calculate round trip time
     clock_t startTime, endTime;
     startTime = clock();
@@ -86,7 +86,7 @@ int main(int argc, char const *argv[]){
     //Sending ftp response to the server
     ftpResponse = "ftp";
     sendto(socketDescriptor, ftpResponse, strlen(ftpResponse), 0, serverAddress->ai_addr, serverAddress->ai_addrlen);
-
+    
     //Receiving response from the server
     socklen_t  addressLength = sizeof(struct sockaddr_storage);
     bytesRecveived = recvfrom(socketDescriptor, messageReceived, MAXLEN-1 , 0, (struct sockaddr *)&serverSocketAddress, &addressLength);
@@ -104,16 +104,17 @@ int main(int argc, char const *argv[]){
         printf("A file transfer can start.\n");
     }
     
-    //Beginning File Transfer and Sending of Packets
-    struct packet* rootPacket = fragmentFile(fileName);
+    //*********Sending Packets**********
+    struct packet* rootPacket = fileConvert(fileName);
     struct packet* currentPacket = rootPacket;
     int length;
     
+    
     while(currentPacket != NULL) {
-        char* condensedPacket = condensePacket(currentPacket, &length);
+        char* compressedPacket = compressPacket(currentPacket, &length);
         
         //Sending the packet
-        bytesRecveived = sendto(socketDescriptor, condensedPacket, length, 0, serverAddress->ai_addr, serverAddress->ai_addrlen);
+        bytesRecveived = sendto(socketDescriptor, compressedPacket, length, 0, serverAddress->ai_addr, serverAddress->ai_addrlen);
         
         //Receiving packets
         bytesRecveived = recvfrom(socketDescriptor, messageReceived, MAXLEN - 1, 0, (struct sockaddr *)&serverSocketAddress, &addressLength);
@@ -124,11 +125,11 @@ int main(int argc, char const *argv[]){
         //Checking to see if the packets have been acknowledged
         if (strcmp(messageReceived, "ACK") != 0)
             continue;
-        printf("Packet %d has been acknowledged by the server.\n", currentPacket->fragmentNumber);
+        printf("Packet %d has been sent.\n", currentPacket->fragmentNumber);
         
         //Go to next packet in the the linked list and free the current packet
         currentPacket = currentPacket->nextPacket;
-        free(condensedPacket);
+        free(compressedPacket);
     }
     
     //Freeing the packet struct

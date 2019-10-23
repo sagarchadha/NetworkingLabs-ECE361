@@ -26,28 +26,28 @@ void printAllPackets(struct packet * p){
     }
 }
 
-//Dissects the file and puts the data into a linked list of packets
-struct packet * fragmentFile(char * file){
+struct packet * fileConvert(char * filename){
     //Initializing vriables
     FILE * filePointer;
-    int total_bytes, total_frag, size, frag_no;
-    char data[FRAGMENTSIZE];
     struct packet * root_packet, * prev_packet;
+    int num_bytes, total_frag, size, frag_no;
+    char data[FRAGMENTSIZE];
+    
     
     //Opens the file in read-mode and binary form
-    filePointer = fopen(file, "rb");
+    filePointer = fopen(filename, "rb");
     
     //Determining total number of bytes in the file
     //By reading the file entirely, then going back to the start
     fseek(filePointer, 0, SEEK_END);
-    total_bytes = ftell(filePointer);
+    num_bytes = ftell(filePointer);
     fseek(filePointer, 0, SEEK_SET);
     
     //Determining the total number of fragments
-    total_frag = (total_bytes/FRAGMENTSIZE) + 1;
+    total_frag = (num_bytes/FRAGMENTSIZE) + 1;
     
     //Creating the linked list of packets so they are connected to each other
-    for (frag_no = 1; frag_no <= total_frag; frag_no++) {
+    for (frag_no=1; frag_no<=total_frag; frag_no++) {
         //Allocating memory for a new packet
         struct packet * new_packet = malloc(sizeof(struct packet));
         
@@ -66,7 +66,7 @@ struct packet * fragmentFile(char * file){
         new_packet->totalFragments = total_frag;
         new_packet->fragmentNumber = frag_no;
         new_packet->fragmentSize = size;
-        new_packet->fileName = file;
+        new_packet->fileName = filename;
         //Using memcpy to copy the block of memory
         memcpy(new_packet->fileData, data, size);
         //Adding a null at the end of the linked list
@@ -103,7 +103,7 @@ void freePackets(struct packet * root){
 }
 
 //Converting the packet to a string format for sending
-char * condensePacket(struct packet * pack, int * len){
+char * compressPacket(struct packet * pack, int * len){
     //Finding the size of each element to allocate spaace
     int s1 = snprintf(NULL, 0, "%d", pack->totalFragments);
     int s2 = snprintf(NULL, 0, "%d", pack->fragmentNumber);
@@ -113,19 +113,19 @@ char * condensePacket(struct packet * pack, int * len){
     int total_size = s1+s2+s3+s4+s5;
     
     //Allocating space for the string to be stored
-    char * condensedPacket = malloc((total_size+4)*sizeof(char));
+    char * compressedPacket = malloc((total_size+4)*sizeof(char));
     
     //Converting and storing the packet details into the string
-    int header_offset = sprintf(condensedPacket, "%d:%d:%d:%s:",
-        pack->totalFragments, pack->fragmentNumber, pack->fragmentSize, pack->fileName);
+    int header_offset = sprintf(compressedPacket, "%d:%d:%d:%s:",
+                                pack->totalFragments, pack->fragmentNumber, pack->fragmentSize, pack->fileName);
     
     //Adding the file data into the packet in the string form
-    memcpy(&condensedPacket[header_offset], pack->fileData, pack->fragmentSize);
+    memcpy(&compressedPacket[header_offset], pack->fileData, pack->fragmentSize);
     
     //Finding the total length of the packet
     *len = header_offset + pack->fragmentSize;
-
-    return condensedPacket;
+    
+    return compressedPacket;
 }
 
 //Converting the packet to its individual elements from string format
@@ -146,13 +146,13 @@ struct packet * extractPacket(char * packet_str){
     frag_no = atoi(frag_no_str);
     size = atoi(size_str);
     
-    //Obtaining the size for the TCP header
-    int tcp_header_size = strlen(total_frag_str) + strlen(frag_no_str) +
+    //Obtaining the size for the UDP header
+    int udp_header_size = strlen(total_frag_str) + strlen(frag_no_str) +
     strlen(size_str) + strlen(filename) + 4;
     
     //Transferring the file data from the string format into bits
     filedata = malloc(size*sizeof(char));
-    memcpy(filedata, &packet_str[tcp_header_size], size);
+    memcpy(filedata, &packet_str[udp_header_size], size);
     
     //Setting all of the packet details to its corresponding members
     extractedPacket = malloc(sizeof(struct packet));
