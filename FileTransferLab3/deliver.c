@@ -110,7 +110,6 @@ int main(int argc, char const *argv[]){
     samplertt = rtt;
     devrtt = rtt/2;
     retimeout = samplertt + 4*devrtt;
-    if (retimeout < 0.5) retimeout = 0.5;
     
     bool retransmissionFlag = false;
     
@@ -135,7 +134,6 @@ int main(int argc, char const *argv[]){
         bytesRecveived = sendto(socketDescriptor, compressedPacket, length, 0, serverAddress->ai_addr, serverAddress->ai_addrlen);
         
         //Monitoring the socket descriptor and setting the timeout
-//        settingTimeout(&timeOut, retimeout);
         timeOut.tv_sec = retimeout/1;
         timeOut.tv_usec = (retimeout - timeOut.tv_sec)*1000000;
         
@@ -144,16 +142,20 @@ int main(int argc, char const *argv[]){
         
         //There is a timeout, so need to retransmit the packet
         if(!FD_ISSET(socketDescriptor, &readFileDescriptor)) {
-            printf("Timeout Occurred: did not receive acknowledgement\n");
+            printf("Error: Timeout Occurred\n");
             retransmissionFlag = true;
             retimeout = retimeout*2;
             free(compressedPacket);
             timeOutCounter++;
-            if (timeOutCounter > 5) {
+            //Breaking out if there are 10 timeouts in a row
+            if (timeOutCounter > 10) {
                 printf("Timed out too many times. Ending the process.\n");
                 return 0;
             }
             continue;
+        }
+        else {
+            timeOutCounter = 0;
         }
         
         //Receiving packets
@@ -179,8 +181,6 @@ int main(int argc, char const *argv[]){
             samplertt = (1-alpha)*samplertt + alpha*rtt;
             devrtt = (1-beta)*devrtt + beta*fabs(samplertt - rtt);
             retimeout = samplertt + 4*devrtt;
-            
-            if (retimeout < 0.5) retimeout = 0.5;
         }
         
         //Go to next packet in the the linked list and free the current packet
