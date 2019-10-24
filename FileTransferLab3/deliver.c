@@ -20,11 +20,6 @@
 #include "packet.h"
 #define MAXLEN 1000
 
-void settingTimeout(struct timeval* timeOut, double retimeout) {
-    timeOut->tv_sec = retimeout/1;
-    timeOut->tv_usec = (retimeout - timeOut->tv_sec)*1000000;
-}
-
 int main(int argc, char const *argv[]){
     int port;
     
@@ -115,6 +110,7 @@ int main(int argc, char const *argv[]){
     samplertt = rtt;
     devrtt = rtt/2;
     retimeout = samplertt + 4*devrtt;
+    if (retimeout < 0.5) retimeout = 0.5;
     
     bool retransmissionFlag = false;
     
@@ -139,7 +135,10 @@ int main(int argc, char const *argv[]){
         bytesRecveived = sendto(socketDescriptor, compressedPacket, length, 0, serverAddress->ai_addr, serverAddress->ai_addrlen);
         
         //Monitoring the socket descriptor and setting the timeout
-        settingTimeout(&timeOut, retimeout);
+//        settingTimeout(&timeOut, retimeout);
+        timeOut.tv_sec = retimeout/1;
+        timeOut.tv_usec = (retimeout - timeOut.tv_sec)*1000000;
+        
         FD_SET(socketDescriptor, &readFileDescriptor);
         select(socketDescriptor+1, &readFileDescriptor, NULL, NULL, &timeOut);
         
@@ -150,7 +149,7 @@ int main(int argc, char const *argv[]){
             retimeout = retimeout*2;
             free(compressedPacket);
             timeOutCounter++;
-            if (timeOutCounter >= 7) {
+            if (timeOutCounter > 5) {
                 printf("Timed out too many times. Ending the process.\n");
                 return 0;
             }
@@ -177,11 +176,11 @@ int main(int argc, char const *argv[]){
         if (retransmissionFlag) retransmissionFlag = false;
         else {
             rtt = ((double) (endTime - startTime)/CLOCKS_PER_SEC);
-            devrtt = (1-beta)*devrtt + beta*fabs(samplertt - rtt);
             samplertt = (1-alpha)*samplertt + alpha*rtt;
+            devrtt = (1-beta)*devrtt + beta*fabs(samplertt - rtt);
             retimeout = samplertt + 4*devrtt;
             
-            if (retimeout < 1) retimeout = 1;
+            if (retimeout < 0.5) retimeout = 0.5;
         }
         
         //Go to next packet in the the linked list and free the current packet
