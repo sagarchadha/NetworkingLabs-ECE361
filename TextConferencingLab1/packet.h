@@ -51,10 +51,12 @@ struct packet {
 };
 
 //Prints all of the packet details (members of the packet struct)
-void printPacket(struct packet * p);
-
-//Prints all of the packets
-void printAllPackets(struct packet * p);
+void printPacket(struct packet * pack){
+    printf("Type: %d", pack->type);
+    printf("Size: %d", pack->size);
+    printf("Source: %s", pack->source);
+    printf("Data: %s", pack->data);
+}
 
 //Frees the memory that was used for the linked list
 void freePackets(struct packet * root);
