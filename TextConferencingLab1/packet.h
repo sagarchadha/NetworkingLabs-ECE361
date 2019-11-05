@@ -56,16 +56,47 @@ void printPacket(struct packet * p);
 //Prints all of the packets
 void printAllPackets(struct packet * p);
 
-//Creates the linked list of packets based on the file
-struct packet * fileConvert(char * filename);
-
 //Frees the memory that was used for the linked list
 void freePackets(struct packet * root);
 
 //Converting the packet to a string format for sending
-char * compressPacket(struct packet * pack, int * len);
+char * compressPacket(struct packet * pack, int * len){
+    //Finding the size of each element to allocate spaace
+    int s1 = snprintf(NULL, 0, "%d", pack->type);
+    int s2 = snprintf(NULL, 0, "%d", pack->size);
+    int s3 = strlen((char*)pack->source);
+    int s4 = strlen((char*)pack->data);
+    int total_size = s1+s2+s3+s4;
+    
+    //Allocating space for the string to be stored
+    char * compressedPacket = malloc((total_size+4)*sizeof(char));
+    
+    //Converting and storing the packet details into the string
+    sprintf(compressedPacket, "%d:%d:%s:%s:", pack->type, pack->size, pack->source, pack->data);
+    return compressedPacket;
+}
 
 //Converting the packet to its individual elements from string format
-struct packet * extractPacket(char * packet_str);
+struct packet * extractPacket(char * packet_str) {
+    if (packet_str == NULL) return NULL;
+    
+    //Declaring Variables
+    struct packet* extracted_Packet = malloc(sizeof(struct packet));
+    char* type_str, size_str, source_str, data_str;
+
+    //Splitting the string based on the the : delimeter
+    type_str = strtok(packet_str, ":");
+    size_str = strtok(NULL, ":");
+    source_str = strtok(NULL, ":");
+    data_str = strtok(NULL, ":");
+    
+    //Setting the members of the packet struct
+    extracted_Packet->type = atoi(type_str);
+    extracted_Packet->size = atoi(size_str);
+    strcpy((char*)extracted_Packet->source,source_str);
+    strcpy((char*)extracted_Packet->data,data_str);
+    
+    return extracted_Packet;
+}
 
 #endif
