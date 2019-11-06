@@ -171,38 +171,38 @@
 // }
 
 #include "packet.h"
-#define PORT 8080 
+#define PORT 3000 
+#define MAXLEN 1000
    
 int main(int argc, char const *argv[]) 
 { 
-    int sock = 0, valread; 
-    struct sockaddr_in serv_addr; 
-    char *hello = "Hello from client"; 
-    char buffer[1024] = {0}; 
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    int client_socket = 0; 
+    struct sockaddr_in server_address; 
+    char message_buffer[MAXLEN] = {0}; 
+    if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
         printf("\n Socket creation error \n"); 
         return -1; 
     } 
    
-    serv_addr.sin_family = AF_INET; 
-    serv_addr.sin_port = htons(PORT); 
+    server_address.sin_family = AF_INET; 
+    server_address.sin_port = htons(PORT); 
        
     // Convert IPv4 and IPv6 addresses from text to binary form 
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)  
+    if(inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr)<=0)  
     { 
         printf("\nInvalid address/ Address not supported \n"); 
         return -1; 
     } 
    
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
+    if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) 
     { 
         printf("\nConnection Failed \n"); 
         return -1; 
     } 
-    send(sock , hello , strlen(hello) , 0 ); 
-    printf("Hello message sent\n"); 
-    valread = read( sock , buffer, 1024); 
-    printf("%s\n",buffer ); 
+    send(client_socket , "hello" , strlen("hello") , 0 ); 
+    read( client_socket , message_buffer, MAXLEN); 
+    printf("%s\n",message_buffer ); 
+    close(client_socket);
     return 0; 
 } 
