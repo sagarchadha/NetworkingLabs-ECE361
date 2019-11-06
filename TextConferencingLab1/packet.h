@@ -46,23 +46,20 @@ enum msgType {
 struct packet {
     unsigned int type;                      //Type of message
     unsigned int size;                      //Size of data
-    unsigned char source[MAX_SOURCE];       //Source of the packet
-    unsigned char data[MAX_DATA];           //Data contained in the packet
+    char source[MAX_SOURCE];       //Source of the packet
+    char data[MAX_DATA];           //Data contained in the packet
 };
 
 //Prints all of the packet details (members of the packet struct)
 void printPacket(struct packet * pack){
-    printf("Type: %d", pack->type);
-    printf("Size: %d", pack->size);
-    printf("Source: %s", pack->source);
-    printf("Data: %s", pack->data);
+    printf("Type: %d\n", pack->type);
+    printf("Size: %d\n", pack->size);
+    printf("Source: %s\n", pack->source);
+    printf("Data: %s\n", pack->data);
 }
 
-//Frees the memory that was used for the linked list
-void freePackets(struct packet * root);
-
 //Converting the packet to a string format for sending
-char * compressPacket(struct packet * pack, int * len){
+char * compressPacket(struct packet * pack){
     //Finding the size of each element to allocate spaace
     int s1 = snprintf(NULL, 0, "%d", pack->type);
     int s2 = snprintf(NULL, 0, "%d", pack->size);
@@ -84,20 +81,9 @@ struct packet * extractPacket(char * packet_str) {
     
     //Declaring Variables
     struct packet* extracted_Packet = malloc(sizeof(struct packet));
-    char* type_str, size_str, source_str, data_str;
-
-    //Splitting the string based on the the : delimeter
-    type_str = strtok(packet_str, ":");
-    size_str = strtok(NULL, ":");
-    source_str = strtok(NULL, ":");
-    data_str = strtok(NULL, ":");
-    
-    //Setting the members of the packet struct
-    extracted_Packet->type = atoi(type_str);
-    extracted_Packet->size = atoi(size_str);
-    strcpy((char*)extracted_Packet->source,source_str);
-    strcpy((char*)extracted_Packet->data,data_str);
-    
+    char buffer[3000];
+    strcpy(buffer, packet_str);
+    sscanf(buffer, "%d:%d:%[^:]:%[^:]", &extracted_Packet->type, &extracted_Packet->size, extracted_Packet->source, extracted_Packet->data);
     return extracted_Packet;
 }
 

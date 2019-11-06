@@ -179,29 +179,65 @@ int main(int argc, char const *argv[])
     int client_socket = 0; 
     struct sockaddr_in server_address; 
     char message_buffer[MAXLEN] = {0}; 
-    if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-    { 
-        printf("\n Socket creation error \n"); 
-        return -1; 
-    } 
-   
-    server_address.sin_family = AF_INET; 
-    server_address.sin_port = htons(PORT); 
-       
-    // Convert IPv4 and IPv6 addresses from text to binary form 
-    if(inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr)<=0)  
-    { 
-        printf("\nInvalid address/ Address not supported \n"); 
-        return -1; 
-    } 
-   
-    if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) 
-    { 
-        printf("\nConnection Failed \n"); 
-        return -1; 
-    } 
-    send(client_socket , "hello" , strlen("hello") , 0 ); 
-    read( client_socket , message_buffer, MAXLEN); 
+
+    char command_buffer[MAXLEN];
+    bool loggedIn = false;
+
+    while(1) {
+        fgets(command_buffer, MAXLEN, stdin);
+        if (strcmp(command_buffer, "\n") == 0) {
+            printf("Please enter a valid command\n");
+            continue;
+        }
+        
+        char* command = strtok(command_buffer, " ");
+        
+        if (strcmp(command, "login") == 0) {
+            if (loggedIn) {
+                printf("Error: Cannot login to multiple users.");
+                continue;
+            }
+            
+            printf("login\n");
+            loggedIn = true;
+            char* clientID = strtok(NULL, " ");
+            char* password = strtok(NULL, " ");
+            char* ipAddress = strtok(NULL, " ");
+            char* serverPort = strtok(NULL, " ");
+
+            if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+            { 
+                printf("\n Socket creation error \n"); 
+                return -1; 
+            } 
+        
+            server_address.sin_family = AF_INET; 
+            server_address.sin_port = htons(PORT); 
+            
+            // Convert IPv4 and IPv6 addresses from text to binary form 
+            if(inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr)<=0)  
+            { 
+                printf("\nInvalid address/ Address not supported \n"); 
+                return -1; 
+            } 
+        
+            if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) 
+            { 
+                printf("\nConnection Failed \n"); 
+                return -1; 
+            } 
+            send(client_socket , "0:1000:Sagar:Sagar,iAmAwesome:" , strlen("0:1000:Sagar:Sagar,iAmAwesome:") , 0 ); 
+            read(client_socket , message_buffer, MAXLEN); 
+            printf("%s\n", message_buffer);
+            if (strcmp(message_buffer, "LO_ACK") == 0) {
+                printf("Received %s", message_buffer);
+                loggedIn = true;
+            }
+            else {
+                printf("Did not receive LO_ACK. Error: %s\n", message_buffer);
+            }
+        }
+    }
     printf("%s\n",message_buffer ); 
     close(client_socket);
     return 0; 

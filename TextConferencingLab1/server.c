@@ -114,14 +114,17 @@
 
 #include "packet.h"
 #define PORT 3000 
-#define MAXLEN 1100
-int main(int argc, char const *argv[]) 
-{ 
+#define MAXLEN 1024
+
+bool find_client(char* clientID_str, char* password_str);
+
+int main(int argc, char const *argv[]) { 
     int server_socket, client_socket, read_value; 
     struct sockaddr_in server_address; 
     int addrlen = sizeof(server_address); 
     int option = 1;
     char message_buffer[MAXLEN] = {0};  
+    int command = 0;
        
     // Creating socket file descriptor 
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
@@ -149,9 +152,51 @@ int main(int argc, char const *argv[])
         perror("accept"); 
         exit(EXIT_FAILURE); 
     } 
-    read(client_socket , message_buffer, MAXLEN); 
-    printf("%s\n",message_buffer ); 
-    send(client_socket , "hello" , strlen("hello") , 0 ); 
+
+    while(command != EXIT){
+        read(client_socket , message_buffer, MAXLEN); 
+        struct packet* currentPacket = extractPacket(message_buffer);
+        printPacket(currentPacket);
+        command = currentPacket->type;
+
+        if (command == LOGIN) {
+            char temp_buffer[MAXLEN];
+            strcpy(temp_buffer, currentPacket->data);
+            printf("%s\n", temp_buffer);
+                        
+            char username[MAXLEN], password[MAXLEN];
+            sscanf(temp_buffer, "%[^,],%s", username, password);
+            printf("%s\n%s\n", username, password);
+            if (find_client(username, password))
+               send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
+            else
+                send(client_socket, "LO_NAK", strlen("LO_NAK"), 0); 
+        }
+    }
     close(server_socket);
     return 0; 
 } 
+
+//Searching for a client in the database
+bool find_client(char* clientID_str, char* password_str) {
+    char* file_name = "userData.txt";
+    char* file_buffer[MAXLEN];
+    FILE* file_pointer = fopen(file_name, "r");
+    while (fscanf(file_pointer,"%s",file_buffer) == 1) {
+        printf("%s\n", file_buffer);
+        if (strcmp(file_buffer, clientID_str) == 0) {
+            if (fscanf(file_pointer,"%s\n",file_buffer) == 1) {
+                printf("Able to compare\n");
+                char password_copy[MAXLEN];
+                strcpy(password_copy, password_str);
+                printf("Before %s\n", password_copy);
+                strncat(password_copy, "\\", 1);
+                printf("After %s\n", password_copy);
+                if (strcmp(file_buffer, password_copy) == 0) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
