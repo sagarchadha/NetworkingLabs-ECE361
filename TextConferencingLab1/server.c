@@ -165,10 +165,19 @@ int main(int argc, char const *argv[]) {
                         
             char username[MAXLEN], password[MAXLEN];
             sscanf(temp_buffer, "%[^,],%s", username, password);
-            if (find_client(username, password))
-               send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
+            if (find_client(username, password)) {
+                //Add the client into a data structure
+                send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
+            }
             else
                 send(client_socket, "LO_NAK", strlen("LO_NAK"), 0); 
+        }
+        else if (command == EXIT){
+            send(client_socket, "EXIT", strlen("EXIT"), 0);
+            break;
+        }
+        else if (command == NEW_SESS) {
+            //send(client_socket, "Sending back", strlen("Sending back"), 0);
         }
     }
     close(server_socket);

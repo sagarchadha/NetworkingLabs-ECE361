@@ -182,6 +182,8 @@ int main(int argc, char const *argv[])
 
     char command_buffer[MAXLEN];
     bool loggedIn = false;
+    char* command;
+    char* clientID;
 
     while(1) {
         fgets(command_buffer, MAXLEN, stdin);
@@ -192,15 +194,15 @@ int main(int argc, char const *argv[])
         
         //Obtained the command from the input
         //memmove(command_buffer, command_buffer+1, strlen(command_buffer+1) +1);
-        char* command = strtok(command_buffer, " ");
+        command = strtok(command_buffer, " ");
         
         if (strcmp(command, "/login") == 0) {
             if (loggedIn) {
                 printf("Error: Cannot login to multiple users.\n");
                 continue;
             }
-            
-            char* clientID = strtok(NULL, " ");
+
+            clientID = strtok(NULL, " ");
             char* password = strtok(NULL, " ");
             char* ipAddress = strtok(NULL, " ");
             char* serverPort = strtok(NULL, " ");
@@ -223,10 +225,10 @@ int main(int argc, char const *argv[])
             } 
         
             server_address.sin_family = AF_INET; 
-            server_address.sin_port = htons(PORT); 
+            server_address.sin_port = htons(atoi(serverPort)); 
             
             // Convert IPv4 and IPv6 addresses from text to binary form 
-            if(inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr)<=0)  
+            if(inet_pton(AF_INET, ipAddress, &server_address.sin_addr)<=0)  
             { 
                 printf("\nInvalid address/ Address not supported \n"); 
                 return -1; 
@@ -249,6 +251,29 @@ int main(int argc, char const *argv[])
                 printf("%s could not succesffuly login.\n", clientID);
             }
         }
+        // else if (strcmp(command, "/exit") == 0 && loggedIn){
+        //     printf("Entered here\n");
+        //     send(client_socket, "3:10:0:0:", strlen("3:10:0:0:"), 0 ); 
+        //     read(client_socket, message_buffer, MAXLEN); 
+        //     if (strcmp(message_buffer, "EXIT") == 0) {
+        //         printf("User successfully exited\n");
+        //         break;
+        //     } 
+        //     else {
+        //         printf("User sadly exited\n");
+        //         break;
+        //     }
+        // }
+        // else {
+        //     printf(" %s Other option.\n", command);
+        //     send(client_socket , "1:100:Sagar:1,2:", strlen("1:100:Sagar:1,2:"), 0 );
+        //     read(client_socket, message_buffer, MAXLEN);
+        //     printf("%s\n", command);
+        // }
+        // else if (strcmp(command, "/createsession") == 0 && loggedIn) {
+        //     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+            
+        // }
     }
     printf("%s\n",message_buffer ); 
     close(client_socket);
