@@ -162,11 +162,9 @@ int main(int argc, char const *argv[]) {
         if (command == LOGIN) {
             char temp_buffer[MAXLEN];
             strcpy(temp_buffer, currentPacket->data);
-            printf("%s\n", temp_buffer);
                         
             char username[MAXLEN], password[MAXLEN];
             sscanf(temp_buffer, "%[^,],%s", username, password);
-            printf("%s\n%s\n", username, password);
             if (find_client(username, password))
                send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
             else
@@ -183,15 +181,11 @@ bool find_client(char* clientID_str, char* password_str) {
     char* file_buffer[MAXLEN];
     FILE* file_pointer = fopen(file_name, "r");
     while (fscanf(file_pointer,"%s",file_buffer) == 1) {
-        printf("%s\n", file_buffer);
         if (strcmp(file_buffer, clientID_str) == 0) {
             if (fscanf(file_pointer,"%s\n",file_buffer) == 1) {
-                printf("Able to compare\n");
                 char password_copy[MAXLEN];
                 strcpy(password_copy, password_str);
-                printf("Before %s\n", password_copy);
                 strncat(password_copy, "\\", 1);
-                printf("After %s\n", password_copy);
                 if (strcmp(file_buffer, password_copy) == 0) {
                     return true;
                 }

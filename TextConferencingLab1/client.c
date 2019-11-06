@@ -190,16 +190,16 @@ int main(int argc, char const *argv[])
             continue;
         }
         
+        //Obtained the command from the input
+        //memmove(command_buffer, command_buffer+1, strlen(command_buffer+1) +1);
         char* command = strtok(command_buffer, " ");
         
-        if (strcmp(command, "login") == 0) {
+        if (strcmp(command, "/login") == 0) {
             if (loggedIn) {
-                printf("Error: Cannot login to multiple users.");
+                printf("Error: Cannot login to multiple users.\n");
                 continue;
             }
             
-            printf("login\n");
-            loggedIn = true;
             char* clientID = strtok(NULL, " ");
             char* password = strtok(NULL, " ");
             char* ipAddress = strtok(NULL, " ");
@@ -240,13 +240,13 @@ int main(int argc, char const *argv[])
             //"0:1000:Sagar:Sagar,iAmAwesome:"
             send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
             read(client_socket , message_buffer, MAXLEN); 
-            //printf("%s\n", message_buffer);
+
             if (strcmp(message_buffer, "LO_ACK") == 0) {
-                printf("Received %s\n", message_buffer);
+                printf("%s successfully logged in\n", clientID);
                 loggedIn = true;
             }
             else {
-                printf("Did not receive LO_ACK. Error: %s\n", message_buffer);
+                printf("%s could not succesffuly login.\n", clientID);
             }
         }
     }
