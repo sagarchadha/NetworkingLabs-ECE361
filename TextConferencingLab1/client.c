@@ -204,6 +204,17 @@ int main(int argc, char const *argv[])
             char* password = strtok(NULL, " ");
             char* ipAddress = strtok(NULL, " ");
             char* serverPort = strtok(NULL, " ");
+            
+            //Convert the inputs to a packet
+            struct packet* pack = malloc(sizeof(struct packet));
+            pack->type = LOGIN;
+            strcpy(pack->source, clientID);
+            char* temp_buffer = (char*)malloc(1+strlen(clientID)+strlen(ipAddress));
+            strcpy(temp_buffer, clientID);
+            strcat(temp_buffer, ",");
+            strcat(temp_buffer, password);
+            strcpy(pack->data, temp_buffer);
+            pack->size = strlen(temp_buffer);
 
             if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
             { 
@@ -226,11 +237,12 @@ int main(int argc, char const *argv[])
                 printf("\nConnection Failed \n"); 
                 return -1; 
             } 
-            send(client_socket , "0:1000:Sagar:Sagar,iAmAwesome:" , strlen("0:1000:Sagar:Sagar,iAmAwesome:") , 0 ); 
+            //"0:1000:Sagar:Sagar,iAmAwesome:"
+            send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
             read(client_socket , message_buffer, MAXLEN); 
-            printf("%s\n", message_buffer);
+            //printf("%s\n", message_buffer);
             if (strcmp(message_buffer, "LO_ACK") == 0) {
-                printf("Received %s", message_buffer);
+                printf("Received %s\n", message_buffer);
                 loggedIn = true;
             }
             else {
