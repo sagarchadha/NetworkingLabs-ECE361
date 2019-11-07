@@ -21,7 +21,6 @@ int main(int argc, char const *argv[])
         }
         
         //Obtained the command from the input
-        //memmove(command_buffer, command_buffer+1, strlen(command_buffer+1) +1);
         if (strchr(command_buffer, ' ') != NULL)
             command = strtok(command_buffer, " ");
         else
@@ -70,13 +69,12 @@ int main(int argc, char const *argv[])
                 printf("\nConnection Failed \n"); 
                 return -1; 
             } 
-            //"0:1000:Sagar:Sagar,iAmAwesome:"
+
             send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
             read(client_socket , message_buffer, MAXLEN); 
             struct packet* rec_pack = extractPacket(message_buffer);
 
             if (rec_pack->type == LO_ACK){
-            //if (strcmp(message_buffer, "LO_ACK") == 0) {
                 printf("%s successfully logged in\n", username);
                 loggedIn = true;
                 strcpy(clientID, username);
@@ -98,7 +96,6 @@ int main(int argc, char const *argv[])
             struct packet* rec_pack = extractPacket(message_buffer);
 
             if (rec_pack->type == NS_ACK){
-            //if (strcmp(message_buffer, "NS_ACK") == 0) {
                 printf("Successfully created session %s", sessionID);
             }
             else {
@@ -118,33 +115,12 @@ int main(int argc, char const *argv[])
             struct packet* rec_pack = extractPacket(message_buffer);
 
             if (rec_pack->type == QU_ACK){
-            //if (strcmp(message_buffer, "NS_ACK") == 0) {
                 printf("%s", rec_pack->data);
             }
             else {
                 printf("Could not send list of users and sessions\n");
             }
         }
-
-        // else if (strcmp(command, "/exit") == 0 && loggedIn){
-        //     printf("Entered here\n");
-        //     send(client_socket, "3:10:0:0:", strlen("3:10:0:0:"), 0 ); 
-        //     read(client_socket, message_buffer, MAXLEN); 
-        //     if (strcmp(message_buffer, "EXIT") == 0) {
-        //         printf("User successfully exited\n");
-        //         break;
-        //     } 
-        //     else {
-        //         printf("User sadly exited\n");
-        //         break;
-        //     }
-        // }
-        // else {
-        //     printf(" %s Other option.\n", command);
-        //     send(client_socket , "1:100:Sagar:1,2:", strlen("1:100:Sagar:1,2:"), 0 );
-        //     read(client_socket, message_buffer, MAXLEN);
-        //     printf("%s\n", command);
-        // }
     }
     printf("%s\n",message_buffer ); 
     close(client_socket);
