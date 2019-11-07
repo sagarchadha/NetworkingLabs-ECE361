@@ -5,6 +5,16 @@
 bool find_client(char* clientID_str, char* password_str);
 
 int main(int argc, char const *argv[]) { 
+    int port;
+    switch(argc) {
+        case 2:
+            port = atoi(argv[1]);
+            break;
+        default:
+            fprintf(stderr, "Use the format: ./server <Port Number>\n");
+            exit(0);
+    }
+    
     int server_socket, client_socket, read_value; 
     struct sockaddr_in server_address; 
     int addrlen = sizeof(server_address); 
@@ -24,7 +34,7 @@ int main(int argc, char const *argv[]) {
     
     server_address.sin_family = AF_INET; 
     server_address.sin_addr.s_addr = INADDR_ANY; 
-    server_address.sin_port = htons( PORT ); 
+    server_address.sin_port = htons(port); 
     
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) { 
         perror("bind failed"); 
