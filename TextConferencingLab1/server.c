@@ -182,8 +182,15 @@ int main(int argc, char const *argv[]) {
 
                 //send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
             }
-            else
-                send(client_socket, "LO_NAK", strlen("LO_NAK"), 0); 
+            else {
+                struct packet* pack = malloc(sizeof(struct packet));
+                pack->type = LO_NAK;
+                strcpy(pack->source, "Server");
+                strcpy(pack->data, "0");
+                pack->size = 0;
+                send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                // send(client_socket, "LO_NAK", strlen("LO_NAK"), 0); 
+            }
         }
         else if (command == EXIT){
             send(client_socket, "EXIT", strlen("EXIT"), 0);
