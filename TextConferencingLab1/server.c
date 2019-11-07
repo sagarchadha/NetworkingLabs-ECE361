@@ -177,7 +177,7 @@ int main(int argc, char const *argv[]) {
             break;
         }
         else if (command == NEW_SESS) {
-            //send(client_socket, "Sending back", strlen("Sending back"), 0);
+            send(client_socket, "NS_ACK", strlen("NS_ACK"), 0);
         }
     }
     close(server_socket);
