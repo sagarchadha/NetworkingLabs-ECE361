@@ -167,7 +167,19 @@ int main(int argc, char const *argv[]) {
             sscanf(temp_buffer, "%[^,],%s", username, password);
             if (find_client(username, password)) {
                 //Add the client into a data structure
-                send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
+                // struct account_info* new_account = create_account(username, password);
+                // account_list = add_to_account_list(account_list, new_account);
+                // print_account_info(account_list);
+                
+                struct packet* pack = malloc(sizeof(struct packet));
+                pack->type = LO_ACK;
+                strcpy(pack->source, "Server");
+                strcpy(pack->data, "0");
+                pack->size = 0;
+
+                send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+
+                //send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
             }
             else
                 send(client_socket, "LO_NAK", strlen("LO_NAK"), 0); 

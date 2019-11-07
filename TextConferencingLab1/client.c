@@ -70,8 +70,10 @@ int main(int argc, char const *argv[])
             //"0:1000:Sagar:Sagar,iAmAwesome:"
             send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
             read(client_socket , message_buffer, MAXLEN); 
+            struct packet* rec_pack = extractPacket(message_buffer);
 
-            if (strcmp(message_buffer, "LO_ACK") == 0) {
+            if (rec_pack->type == LO_ACK){
+            //if (strcmp(message_buffer, "LO_ACK") == 0) {
                 printf("%s successfully logged in\n", username);
                 loggedIn = true;
                 strcpy(clientID, username);
