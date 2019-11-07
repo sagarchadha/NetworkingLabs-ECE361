@@ -22,7 +22,10 @@ int main(int argc, char const *argv[])
         
         //Obtained the command from the input
         //memmove(command_buffer, command_buffer+1, strlen(command_buffer+1) +1);
-        command = strtok(command_buffer, " ");
+        if (strchr(command_buffer, ' ') != NULL)
+            command = strtok(command_buffer, " ");
+        else
+            command = strtok(command_buffer, "\n");
         
         if (strcmp(command, "/login") == 0) {
             if (loggedIn) {

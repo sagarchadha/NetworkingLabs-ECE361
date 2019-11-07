@@ -216,26 +216,32 @@ int main(int argc, char const *argv[]) {
             //send(client_socket, "NS_ACK", strlen("NS_ACK"), 0);
         }
         else if (command == QUERY) {
-            char list[MAXLEN] = "Active Users\n";
-            struct account_info* current_account = account_list;
+            char list[MAXLEN];
+            if ((account_list != NULL) && (session_list != NULL)) {
+                strcat(list,"Active Users\n");
+                struct account_info* current_account = account_list;
 
-            while (current_account != NULL){
-                if (current_account->connected) {
-                    strcat(list,current_account->clientID);
-                    strcat(list,"\n");
-				}
-				current_account = current_account->next_account;
+                while (current_account != NULL){
+                    if (current_account->connected) {
+                        strcat(list,current_account->clientID);
+                        strcat(list,"\n");
+                    }
+                    current_account = current_account->next_account;
+                }
+
+                strcat(list,"\nActive Sessions\n"); 
+                struct session* current_session = session_list;
+
+                while (current_session != NULL){
+                    if (current_session->active) {
+                        strcat(list,current_session->session_id);
+                        strcat(list,"\n");
+                    }
+                    current_session = current_session->next_session;
+                }
             }
-
-            strcat(list,"\nActive Sessions\n"); 
-            struct session* current_session = session_list;
-
-            while (current_session != NULL){
-                if (current_session->active) {
-                    strcat(list,current_session->session_id);
-                    strcat(list,"\n");
-				}
-				current_session = current_session->next_session;
+            else {
+                strcat(list,"No active users or sessions.\n");
             }
 
             struct packet* pack = malloc(sizeof(struct packet));
@@ -244,6 +250,7 @@ int main(int argc, char const *argv[]) {
             strcpy(pack->data, list);
             pack->size = strlen(pack->data);
             send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+            memset(list, 0, MAXLEN);
 
             //send(client_socket, "NS_ACK", strlen("NS_ACK"), 0);
         }
