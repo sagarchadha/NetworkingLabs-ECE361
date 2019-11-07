@@ -54,7 +54,8 @@ struct account_info* search_account(struct account_info* root, char* id){
     struct account_info* current_account = root;
     while (current_account != NULL) {
         if (strcmp(current_account->clientID, id) == 0){
-            struct account_info* new_account = copy_account(current_account);
+            //struct account_info* new_account = copy_account(current_account);
+            struct account_info* new_account = current_account;
             return new_account;
         }
         current_account = current_account->next_account;

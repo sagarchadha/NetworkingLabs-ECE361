@@ -102,6 +102,27 @@ int main(int argc, char const *argv[])
                 printf("Could not successfully create session %s\n", sessionID);
             }
         }
+        else if (strcmp(command, "/list") == 0 && loggedIn) {
+            char* sessionID = strtok(NULL, " ");
+            struct packet* pack = malloc(sizeof(struct packet));
+            pack->type = QUERY;
+            strcpy(pack->source, clientID);
+            strcpy(pack->data, "0");
+            pack->size = strlen(pack->data);
+
+            send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+            read(client_socket , message_buffer, MAXLEN); 
+            struct packet* rec_pack = extractPacket(message_buffer);
+
+            if (rec_pack->type == QU_ACK){
+            //if (strcmp(message_buffer, "NS_ACK") == 0) {
+                printf("%s", rec_pack->data);
+            }
+            else {
+                printf("Could not send list of users and sessions\n");
+            }
+        }
+
         // else if (strcmp(command, "/exit") == 0 && loggedIn){
         //     printf("Entered here\n");
         //     send(client_socket, "3:10:0:0:", strlen("3:10:0:0:"), 0 ); 
