@@ -112,7 +112,7 @@
 //     return 0;
 // }
 
-#include "packet.h"
+#include "data.h"
 #define PORT 3000 
 #define MAXLEN 1024
 
@@ -125,6 +125,7 @@ int main(int argc, char const *argv[]) {
     int option = 1;
     char message_buffer[MAXLEN] = {0};  
     int command = 0;
+    struct account_info* account_list = NULL;
        
     // Creating socket file descriptor 
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
@@ -167,9 +168,9 @@ int main(int argc, char const *argv[]) {
             sscanf(temp_buffer, "%[^,],%s", username, password);
             if (find_client(username, password)) {
                 //Add the client into a data structure
-                // struct account_info* new_account = create_account(username, password);
-                // account_list = add_to_account_list(account_list, new_account);
-                // print_account_info(account_list);
+                struct account_info* new_account = create_account(username, password);
+                account_list = add_to_account_list(account_list, new_account);
+                print_account_info(account_list);
                 
                 struct packet* pack = malloc(sizeof(struct packet));
                 pack->type = LO_ACK;
