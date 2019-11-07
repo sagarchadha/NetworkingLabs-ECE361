@@ -84,7 +84,7 @@ int main(int argc, char const *argv[])
             }
         }
         else if (strcmp(command, "/createsession") == 0 && loggedIn) {
-            char* sessionID = strtok(NULL, " ");
+            char* sessionID = strtok(NULL, "\n");
             struct packet* pack = malloc(sizeof(struct packet));
             pack->type = NEW_SESS;
             strcpy(pack->source, clientID);
@@ -96,7 +96,7 @@ int main(int argc, char const *argv[])
             struct packet* rec_pack = extractPacket(message_buffer);
 
             if (rec_pack->type == NS_ACK){
-                printf("Successfully created session %s", sessionID);
+                printf("Successfully created session %s\n", sessionID);
             }
             else {
                 printf("Could not successfully create session %s\n", sessionID);
@@ -120,6 +120,9 @@ int main(int argc, char const *argv[])
             else {
                 printf("Could not send list of users and sessions\n");
             }
+        }
+        else {
+            printf("Please enter a valid command.\n");
         }
     }
     printf("%s\n",message_buffer ); 
