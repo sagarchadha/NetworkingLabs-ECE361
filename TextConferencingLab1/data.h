@@ -39,15 +39,27 @@ struct account_info* create_account(char* id, char* p){
     return new_account;
 }
 
+//Copy an account
+struct account_info* copy_account(struct account_info* old_account) {
+    struct account_info* new_account = (struct account_info*)malloc(sizeof(struct account_info));
+    strcpy(new_account->clientID, old_account->clientID);
+    strcpy(new_account->password, old_account->password);
+    new_account->connected = old_account->connected;
+    new_account->next_account = NULL;
+    return new_account;
+}
+
 //Search in the account log
-bool search_account(struct account_info* root, char* id){
+struct account_info* search_account(struct account_info* root, char* id){
     struct account_info* current_account = root;
     while (current_account != NULL) {
         if (strcmp(current_account->clientID, id) == 0){
-            return true;
+            struct account_info* new_account = copy_account(current_account);
+            return new_account;
         }
+        current_account = current_account->next_account;
     }
-    return false;
+    return NULL;
 }
 
 //Adding a user to the list
@@ -91,12 +103,24 @@ struct session* add_account_to_session(struct session* root, struct account_info
     struct session* current_session = root;
     while (current_session != NULL) {
         if (strcmp(current_session->session_id, id) == 0) {
+            if (current_session->user_list == NULL) {
+                current_session->user_list = copy_account(new_account);
+                current_session->user_list->connected = true;
+                //print_account_info(current_session->user_list);
+                current_session->user_count = current_session->user_count + 1;
+                current_session->active = true;
+                return root;
+            }
+
             struct account_info* current_account = current_session->user_list;
             
-            while (current_account->next_account != NULL)
+            while (current_account != NULL) {
                 current_account = current_account->next_account;
+            }
             
-            current_account = new_account;
+            current_account = copy_account(new_account);
+            current_account->connected = true;
+            //print_account_info(current_account);
             current_session->user_count = current_session->user_count + 1;
             current_session->active = true;
             return root;
@@ -122,16 +146,16 @@ struct session* add_to_session_list(struct session* root, struct session* new_se
 }
 
 //Print the list of sessions and active users
-// char* print_session_users(struct session* root) {
-//     if (root == NULL) {
-//         return NULL;
-//     }
-//     char string_to_print[MAX_DATA];
-    
-//     struct session* curret_session = root;
-
-
-// }
+void print_session_info(struct session* root) {
+    if (root == NULL) {
+        return;
+    }
+    printf("Session contents:\n");
+    printf("Session ID: %s", root->session_id);
+    printf("Num of Users: %d\n", root->user_count);
+    printf("Client: %s\n", root->user_list->clientID);
+    printf("Active Status: %d\n", root->active);
+}
 
 
 #endif

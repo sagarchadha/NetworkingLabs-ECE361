@@ -126,6 +126,7 @@ int main(int argc, char const *argv[]) {
     char message_buffer[MAXLEN] = {0};  
     int command = 0;
     struct account_info* account_list = NULL;
+    struct session* session_list = NULL;
        
     // Creating socket file descriptor 
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
@@ -156,7 +157,8 @@ int main(int argc, char const *argv[]) {
 
     while(command != EXIT){
         read(client_socket , message_buffer, MAXLEN); 
-        struct packet* currentPacket = extractPacket(message_buffer);
+        struct packet
+        * currentPacket = extractPacket(message_buffer);
         printPacket(currentPacket);
         command = currentPacket->type;
 
@@ -170,8 +172,8 @@ int main(int argc, char const *argv[]) {
                 //Add the client into a data structure
                 struct account_info* new_account = create_account(username, password);
                 account_list = add_to_account_list(account_list, new_account);
-                print_account_info(account_list);
-                
+                //print_account_info(account_list);
+
                 struct packet* pack = malloc(sizeof(struct packet));
                 pack->type = LO_ACK;
                 strcpy(pack->source, "Server");
@@ -197,7 +199,21 @@ int main(int argc, char const *argv[]) {
             break;
         }
         else if (command == NEW_SESS) {
-            send(client_socket, "NS_ACK", strlen("NS_ACK"), 0);
+            struct session* new_session = create_session(currentPacket->data);
+            session_list = add_to_session_list(session_list, new_session);
+            struct account_info* new_account = search_account(account_list, currentPacket->source);
+            
+            session_list = add_account_to_session(session_list, new_account, currentPacket->data);
+            //print_session_info(session_list);
+            
+            struct packet* pack = malloc(sizeof(struct packet));
+            pack->type = NS_ACK;
+            strcpy(pack->source, "Server");
+            strcpy(pack->data, currentPacket->data);
+            pack->size = strlen(currentPacket->data);
+            send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+
+            //send(client_socket, "NS_ACK", strlen("NS_ACK"), 0);
         }
     }
     close(server_socket);

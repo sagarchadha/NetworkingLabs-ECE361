@@ -92,8 +92,10 @@ int main(int argc, char const *argv[])
 
             send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
             read(client_socket , message_buffer, MAXLEN); 
+            struct packet* rec_pack = extractPacket(message_buffer);
 
-            if (strcmp(message_buffer, "NS_ACK") == 0) {
+            if (rec_pack->type == NS_ACK){
+            //if (strcmp(message_buffer, "NS_ACK") == 0) {
                 printf("Successfully created session %s", sessionID);
             }
             else {
