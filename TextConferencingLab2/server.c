@@ -144,6 +144,7 @@ int main(int argc, char const *argv[]) {
                     session_list = add_to_session_list(session_list, new_session);
                     struct account_info* new_account = search_account(account_list, currentPacket->source);
                     new_account->connected = true;
+                    add_session_to_account(new_account, currentPacket->data);
                     session_list = add_account_to_session(session_list, new_account, currentPacket->data);
                     
                     struct packet* pack = malloc(sizeof(struct packet));
@@ -152,15 +153,29 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
-                }
+                }//hi
                 else if (command == JOIN) {
                     struct session* current_session = search_session(session_list, currentPacket->data);
                     struct account_info* new_account = search_account(account_list, currentPacket->source);
                     new_account->connected = true;
+                    add_session_to_account(new_account, currentPacket->data);
                     session_list = add_account_to_session(session_list, new_account, currentPacket->data);
                     
                     struct packet* pack = malloc(sizeof(struct packet));
                     pack->type = JN_ACK;
+                    strcpy(pack->source, "Server");
+                    strcpy(pack->data, currentPacket->data);
+                    pack->size = strlen(currentPacket->data);
+                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                }
+                else if (command == LEAVE_SESS) {
+                    struct session* current_session = search_session(session_list, currentPacket->data);
+                    struct account_info* account = search_account(account_list, currentPacket->source);
+                    remove_session_from_account(account, currentPacket->data);
+                    //session_list = remove_account_from_session(session_list, account->clientID, currentPacket->data);
+                    
+                    struct packet* pack = malloc(sizeof(struct packet));
+                    pack->type = LEAVE_ACK;
                     strcpy(pack->source, "Server");
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);
@@ -229,83 +244,3 @@ bool find_client(char* clientID_str, char* password_str) {
     }
     return false;
 }
-
-// int main(int argc, char **argv) {
-
-//   fd_set fds, readfds;
-//   int i, clientaddrlen;
-//   int clientsock[2], rc, numsocks = 0, maxsocks = 2;
-
-//   int serversock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-//   if (serversock == -1) perror("Socket");
-
-//   struct sockaddr_in serveraddr, clientaddr;  
-//   bzero(&serveraddr, sizeof(struct sockaddr_in));
-//   serveraddr.sin_family = AF_INET;
-//   serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-//   serveraddr.sin_port = htons(6782);
-    
-//     int option = 1;
-//     setsockopt(serversock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-
-//   if (-1 == bind(serversock, (struct sockaddr *)&serveraddr, 
-//                  sizeof(struct sockaddr_in))) 
-//     perror("Bind");
-
-//   if (-1 == listen(serversock, SOMAXCONN))
-//     perror("Listen");
-
-//   FD_ZERO(&fds);
-//   FD_SET(serversock, &fds);
-
-//   while(1) {
-
-//     readfds = fds;
-//     rc = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
-
-//     if (rc == -1) {
-//       perror("Select");
-//       break;
-//     }
-
-//     for (i = 0; i < FD_SETSIZE; i++) {
-//       if (FD_ISSET(i, &readfds)) {
-//         if (i == serversock) {
-//         printf("1\n");
-//           if (numsocks < maxsocks) {
-//               printf("2\n");
-//             clientsock[numsocks] = accept(serversock,
-//                                       (struct sockaddr *) &clientaddr,
-//                                       (socklen_t *)&clientaddrlen);
-//             if (clientsock[numsocks] == -1) perror("Accept");
-//             FD_SET(clientsock[numsocks], &fds);
-//             numsocks++;
-//           } else {
-//             printf("Ran out of socket space.\n");
-
-//           }
-//         } else {
-//           int messageLength = 5;
-//           char message[messageLength+1];
-//           int in, index = 0, limit = messageLength+1;
-
-//           while ((in = recv(i, &message[index], limit, 0)) > 0) {
-//             index += in;
-//             limit -= in;
-//           }
-//             printf("3\n");
-//           printf("%d\n", index);
-//           printf("%s\n", message);
-//           int j;
-//           for (j = 0; j <= numsocks; j++) {
-//             send(clientsock[j], message, strlen(message), 0);
-//           }
-//         }
-//       }
-//     }
-//   }
-
-//   close(serversock);
-//   return 0;
-// }
-

@@ -1,5 +1,5 @@
 //
-//  packet.h
+//  data.h
 //  TextConferencingLab1
 //
 //  Created by Sagar Chadha & Pratiksha Shenoy on 2019-11-04.
@@ -27,6 +27,12 @@ struct account_info{
     char password[MAX_DATA];
     bool connected;
     struct account_info* next_account;
+    struct session_id* session_id_list;
+};
+
+struct session_id{
+    char session_id[MAX_DATA];
+    struct session_id* next_session;
 };
 
 //Creating the user account
@@ -36,6 +42,7 @@ struct account_info* create_account(char* id, char* p){
     strcpy(new_account->password, p);
     new_account->connected = false;
     new_account->next_account = NULL;
+    new_account->session_id_list = NULL;
     return new_account;
 }
 
@@ -89,6 +96,52 @@ void print_account_info(struct account_info* account){
         printf("User is not connected to a session\n");
 }
 
+//Adds a session to the list of sessions that the account is in
+void add_session_to_account(struct account_info* account, char* id){
+    if (account->session_id_list == NULL) {
+        struct session_id* new_session = (struct session*)malloc(sizeof(struct session_id));
+        strcpy(new_session->session_id, id);
+        new_session->next_session = NULL;
+        account->session_id_list = new_session;
+    }
+    else {
+        struct session_id* current_session = account->session_id_list;
+        while (current_session->next_session != NULL) {
+            current_session->next_session;
+        }
+        struct session_id* new_session = (struct session*)malloc(sizeof(struct session_id));
+        strcpy(new_session->session_id, id);
+        new_session->next_session = NULL;
+        current_session->next_session = new_session;
+    }
+}
+
+//Removes a session from the list of sessions that the account is in
+void remove_session_from_account(struct account_info* account, char* id){
+    struct session_id* current_session = account->session_id_list;
+    struct session_id* previous_session;
+    
+    if (current_session->next_session == NULL && strcmp(current_session->session_id, id) == 0){
+        free(current_session);
+        account->session_id_list = NULL;
+        account->connected = false;
+        return;
+    } 
+
+    while (current_session->next_session != NULL) {
+        if (strcmp(current_session->next_session->session_id, id) == 0){
+            break;
+        }
+        previous_session = current_session;
+        current_session = current_session->next_session;
+    }
+
+    if (current_session == NULL) return;
+
+    previous_session->next_session = current_session;
+    free(current_session);
+}
+
 struct session* create_session(char* id) {
     struct session* new_session = (struct session*)malloc(sizeof(struct session));
     strcpy(new_session->session_id, id);
@@ -105,6 +158,8 @@ struct session* search_session(struct session* root, char* id) {
     while (current_session != NULL) {
         if (strcmp(current_session->session_id, id) == 0)
             return current_session;
+        else
+            current_session = current_session->next_session;
     }
     return NULL;        
 }
@@ -180,6 +235,27 @@ struct session* add_to_session_list(struct session* root, struct session* new_se
     
     return root;
 }
+
+//Removes an account from the list of users that a session has
+// struct session* remove_account_from_session(struct session* root, char* account_id, char* id){
+//     struct session* current_session = root;
+//     struct session* previous_session;
+
+//     if (current_session == NULL) return NULL;
+
+//     while (current_session->next_session != NULL) {
+//         if (strcmp(current_session->next_session->session_id, id) == 0){
+//             break;
+//         }
+//         previous_session = current_session;
+//         current_session = current_session->next_session;
+//     }
+
+//     if (current_session == NULL) return;
+
+//     previous_session->next_session = current_session;
+//     free(current_session);
+// }
 
 //Print the list of sessions and active users
 void print_session_info(struct session* root) {

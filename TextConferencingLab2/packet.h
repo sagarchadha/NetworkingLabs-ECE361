@@ -40,7 +40,8 @@ enum msgType {
     NS_ACK,
     MESSAGE,
     QUERY,
-    QU_ACK
+    QU_ACK,
+    LEAVE_ACK
 };
 
 //Packet contents
