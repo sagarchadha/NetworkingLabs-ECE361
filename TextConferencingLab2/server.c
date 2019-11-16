@@ -145,7 +145,6 @@ int main(int argc, char const *argv[]) {
                     struct account_info* new_account = search_account(account_list, currentPacket->source);
                     new_account->connected = true;
                     session_list = add_account_to_session(session_list, new_account, currentPacket->data);
-                    //print_session_info(session_list);
                     
                     struct packet* pack = malloc(sizeof(struct packet));
                     pack->type = NS_ACK;
@@ -153,8 +152,21 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
-
-                    //send(client_socket, "NS_ACK", strlen("NS_ACK"), 0);
+                }
+                else if (command == JOIN) {
+                    //struct session* new_session = create_session(currentPacket->data);
+                    //session_list = add_to_session_list(session_list, new_session);
+                    struct session* current_session = search_session(session_list, currentPacket->data);
+                    struct account_info* new_account = search_account(account_list, currentPacket->source);
+                    new_account->connected = true;
+                    session_list = add_account_to_session(session_list, new_account, currentPacket->data);
+                    
+                    struct packet* pack = malloc(sizeof(struct packet));
+                    pack->type = JN_ACK;
+                    strcpy(pack->source, "Server");
+                    strcpy(pack->data, currentPacket->data);
+                    pack->size = strlen(currentPacket->data);
+                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
                 }
                 else if (command == QUERY) {
                     char list[MAXLEN];
@@ -192,8 +204,6 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->data, list);
                     pack->size = strlen(pack->data);
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
-
-                    //send(client_socket, "NS_ACK", strlen("NS_ACK"), 0);
                 }
             }
         }

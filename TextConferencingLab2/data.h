@@ -99,6 +99,16 @@ struct session* create_session(char* id) {
     return new_session;
 }
 
+//Search for a session in the list of sessions
+struct session* search_session(struct session* root, char* id) {
+    struct session* current_session = root;
+    while (current_session != NULL) {
+        if (strcmp(current_session->session_id, id) == 0)
+            return current_session;
+    }
+    return NULL;        
+}
+
 //Adding an account to a session
 struct session* add_account_to_session(struct session* root, struct account_info* new_account, char* id) {
     struct session* current_session = root;

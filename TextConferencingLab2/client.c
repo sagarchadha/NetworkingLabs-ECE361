@@ -103,6 +103,25 @@ int main(int argc, char const *argv[])
                 printf("Could not successfully create session %s\n", sessionID);
             }
         }
+        else if (strcmp(command, "/joinsession") == 0 && loggedIn) {
+            char* sessionID = strtok(NULL, "\n");
+            struct packet* pack = malloc(sizeof(struct packet));
+            pack->type = JOIN;
+            strcpy(pack->source, clientID);
+            strcpy(pack->data, sessionID);
+            pack->size = strlen(sessionID);
+
+            send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+            read(client_socket , message_buffer, MAXLEN); 
+            struct packet* rec_pack = extractPacket(message_buffer);
+
+            if (rec_pack->type == JN_ACK){
+                printf("Successfully joined session %s\n", sessionID);
+            }
+            else {
+                printf("Could not successfully create session %s\n", sessionID);
+            }
+        }
         else if (strcmp(command, "/list") == 0 && loggedIn) {
             char* sessionID = strtok(NULL, " ");
             struct packet* pack = malloc(sizeof(struct packet));
