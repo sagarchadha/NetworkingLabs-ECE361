@@ -154,8 +154,6 @@ int main(int argc, char const *argv[]) {
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
                 }
                 else if (command == JOIN) {
-                    //struct session* new_session = create_session(currentPacket->data);
-                    //session_list = add_to_session_list(session_list, new_session);
                     struct session* current_session = search_session(session_list, currentPacket->data);
                     struct account_info* new_account = search_account(account_list, currentPacket->source);
                     new_account->connected = true;

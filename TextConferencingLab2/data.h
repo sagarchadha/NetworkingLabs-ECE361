@@ -111,35 +111,58 @@ struct session* search_session(struct session* root, char* id) {
 
 //Adding an account to a session
 struct session* add_account_to_session(struct session* root, struct account_info* new_account, char* id) {
-    struct session* current_session = root;
-    while (current_session != NULL) {
-        if (strcmp(current_session->session_id, id) == 0) {
-            if (current_session->user_list == NULL) {
-                current_session->user_list = copy_account(new_account);
-                current_session->user_list->connected = true;
-                //print_account_info(current_session->user_list);
-                current_session->user_count = current_session->user_count + 1;
-                current_session->active = true;
-                return root;
-            }
-
-            struct account_info* current_account = current_session->user_list;
-            
-            while (current_account != NULL) {
-                current_account = current_account->next_account;
-            }
-            
-            current_account = copy_account(new_account);
-            current_account->connected = true;
-            //print_account_info(current_account);
+    struct session* current_session = search_session(root, id);
+    if (current_session != NULL){
+        if (current_session->user_list == NULL) {
+            current_session->user_list = copy_account(new_account);
+            current_session->user_list->connected = true;
             current_session->user_count = current_session->user_count + 1;
             current_session->active = true;
             return root;
         }
-        else
-            current_session = current_session->next_session;
+
+        struct account_info* current_account = current_session->user_list;
+            
+        while (current_account != NULL) {
+            current_account = current_account->next_account;
+        }
+        
+        current_account = copy_account(new_account);
+        current_account->connected = true;
+        current_session->user_count = current_session->user_count + 1;
+        current_session->active = true;
+        return root;
     }
     return NULL;
+    // struct session* current_session = root;
+    // while (current_session != NULL) {
+    //     if (strcmp(current_session->session_id, id) == 0) {
+    //         if (current_session->user_list == NULL) {
+    //             current_session->user_list = copy_account(new_account);
+    //             current_session->user_list->connected = true;
+    //             //print_account_info(current_session->user_list);
+    //             current_session->user_count = current_session->user_count + 1;
+    //             current_session->active = true;
+    //             return root;
+    //         }
+
+    //         struct account_info* current_account = current_session->user_list;
+            
+    //         while (current_account != NULL) {
+    //             current_account = current_account->next_account;
+    //         }
+            
+    //         current_account = copy_account(new_account);
+    //         current_account->connected = true;
+    //         //print_account_info(current_account);
+    //         current_session->user_count = current_session->user_count + 1;
+    //         current_session->active = true;
+    //         return root;
+    //     }
+    //     else
+    //         current_session = current_session->next_session;
+    // }
+    // return NULL;
 }
 
 //Adding a session to the linked list of sessions
