@@ -153,7 +153,7 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
-                }//hi
+                }
                 else if (command == JOIN) {
                     struct session* current_session = search_session(session_list, currentPacket->data);
                     struct account_info* new_account = search_account(account_list, currentPacket->source);
@@ -169,13 +169,17 @@ int main(int argc, char const *argv[]) {
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
                 }
                 else if (command == LEAVE_SESS) {
+                    struct packet* pack = malloc(sizeof(struct packet));
+                    
                     struct session* current_session = search_session(session_list, currentPacket->data);
                     struct account_info* account = search_account(account_list, currentPacket->source);
                     remove_session_from_account(account, currentPacket->data);
-                    //session_list = remove_account_from_session(session_list, account->clientID, currentPacket->data);
+
+                    if (remove_account_from_session(session_list, account->clientID, currentPacket->data))
+                        pack->type = LEAVE_ACK;
+                    else
+                        pack->type = LEAVE_NAK;
                     
-                    struct packet* pack = malloc(sizeof(struct packet));
-                    pack->type = LEAVE_ACK;
                     strcpy(pack->source, "Server");
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);

@@ -236,26 +236,63 @@ struct session* add_to_session_list(struct session* root, struct session* new_se
     return root;
 }
 
+//Removing an account from a session
+bool remove_account_from_session(struct session* root, char* account_id, char* id){
+    struct session* current_session = search_session(root, id);
+    
+    if (current_session == NULL) return false;
+
+    struct account_info* current_account = current_session->user_list;
+    struct account_info* previous_account;
+
+    if (strcmp(current_account->clientID, account_id) == 0) {
+        current_session->user_list = current_account->next_account;
+        free(current_account);
+        return true;
+    }
+
+    while (current_account->next_account != NULL) {
+        if (strcmp(current_account->clientID, account_id) == 0) {
+            break;
+        }
+        previous_account = current_account;
+        current_account = current_account->next_account;
+    }
+    if (strcmp(current_account->clientID, account_id) == 0) {
+        previous_account->next_account = current_account->next_account;
+        free(current_account);
+        return true;
+    }
+    return false;
+}
+
 //Removes an account from the list of users that a session has
-// struct session* remove_account_from_session(struct session* root, char* account_id, char* id){
-//     struct session* current_session = root;
-//     struct session* previous_session;
+struct session* remove_session_info(struct session* root, char* account_id, char* id){
+    struct session* current_session = root;
+    struct session* previous_session;
 
-//     if (current_session == NULL) return NULL;
+    if (current_session == NULL) return NULL;
 
-//     while (current_session->next_session != NULL) {
-//         if (strcmp(current_session->next_session->session_id, id) == 0){
-//             break;
-//         }
-//         previous_session = current_session;
-//         current_session = current_session->next_session;
-//     }
+    while (current_session->next_session != NULL) {
+        if (strcmp(current_session->next_session->session_id, id) == 0){
+            break;
+        }
+        previous_session = current_session;
+        current_session = current_session->next_session;
+    }
 
-//     if (current_session == NULL) return;
+    if (current_session == NULL) return NULL;
 
-//     previous_session->next_session = current_session;
-//     free(current_session);
-// }
+    struct session* current_account = current_session->user_list;
+    struct session* previous_account;
+
+
+
+    previous_session->next_session = current_session;
+    free(current_session);
+
+
+}
 
 //Print the list of sessions and active users
 void print_session_info(struct session* root) {
@@ -268,6 +305,5 @@ void print_session_info(struct session* root) {
     printf("Client: %s\n", root->user_list->clientID);
     printf("Active Status: %d\n", root->active);
 }
-
 
 #endif
