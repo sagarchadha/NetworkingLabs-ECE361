@@ -171,15 +171,16 @@ int main(int argc, char const *argv[]) {
                 else if (command == LEAVE_SESS) {
                     struct packet* pack = malloc(sizeof(struct packet));
                     
-                    struct session* current_session = search_session(session_list, currentPacket->data);
                     struct account_info* account = search_account(account_list, currentPacket->source);
-                    remove_session_from_account(account, currentPacket->data);
-
-                    if (remove_account_from_session(session_list, account->clientID, currentPacket->data))
+                    if (remove_session_from_account(account, currentPacket->data) &&
+                    remove_account_from_session(session_list, account->clientID, currentPacket->data))
                         pack->type = LEAVE_ACK;
                     else
                         pack->type = LEAVE_NAK;
-                    
+
+                    if (search_session(session_list, currentPacket->data)->user_list == NULL)
+                        session_list = remove_session(session_list, currentPacket->data);
+
                     strcpy(pack->source, "Server");
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);

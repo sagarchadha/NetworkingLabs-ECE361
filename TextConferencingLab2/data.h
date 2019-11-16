@@ -117,7 +117,7 @@ void add_session_to_account(struct account_info* account, char* id){
 }
 
 //Removes a session from the list of sessions that the account is in
-void remove_session_from_account(struct account_info* account, char* id){
+bool remove_session_from_account(struct account_info* account, char* id){
     struct session_id* current_session = account->session_id_list;
     struct session_id* previous_session;
     
@@ -125,21 +125,23 @@ void remove_session_from_account(struct account_info* account, char* id){
         free(current_session);
         account->session_id_list = NULL;
         account->connected = false;
-        return;
+        return true;
     } 
 
     while (current_session->next_session != NULL) {
-        if (strcmp(current_session->next_session->session_id, id) == 0){
+        if (strcmp(current_session->session_id, id) == 0){
             break;
         }
         previous_session = current_session;
         current_session = current_session->next_session;
     }
 
-    if (current_session == NULL) return;
-
-    previous_session->next_session = current_session;
-    free(current_session);
+    if (strcmp(current_session->session_id, id) == 0) {
+        previous_session->next_session = current_session->next_session;
+        free(current_session);
+        return true;
+    }
+    return false;
 }
 
 struct session* create_session(char* id) {
@@ -178,12 +180,12 @@ struct session* add_account_to_session(struct session* root, struct account_info
 
         struct account_info* current_account = current_session->user_list;
             
-        while (current_account != NULL) {
+        while (current_account->next_account != NULL) {
             current_account = current_account->next_account;
         }
         
-        current_account = copy_account(new_account);
-        current_account->connected = true;
+        current_account->next_account = copy_account(new_account);
+        current_account->next_account->connected = true;
         current_session->user_count = current_session->user_count + 1;
         current_session->active = true;
         return root;
@@ -267,31 +269,29 @@ bool remove_account_from_session(struct session* root, char* account_id, char* i
 }
 
 //Removes an account from the list of users that a session has
-struct session* remove_session_info(struct session* root, char* account_id, char* id){
+struct session* remove_session(struct session* root, char* id){
     struct session* current_session = root;
     struct session* previous_session;
 
     if (current_session == NULL) return NULL;
+    
+    if (strcmp(current_session->session_id, id) == 0) {
+        root = current_session->next_session;
+        free(current_session);
+        return root;
+    }
 
     while (current_session->next_session != NULL) {
-        if (strcmp(current_session->next_session->session_id, id) == 0){
+        if (strcmp(current_session->session_id, id) == 0){
             break;
         }
         previous_session = current_session;
         current_session = current_session->next_session;
     }
-
-    if (current_session == NULL) return NULL;
-
-    struct session* current_account = current_session->user_list;
-    struct session* previous_account;
-
-
-
-    previous_session->next_session = current_session;
+    
+    previous_session->next_session = current_session->next_session;
     free(current_session);
-
-
+    return root;
 }
 
 //Print the list of sessions and active users
