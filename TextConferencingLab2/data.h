@@ -126,6 +126,8 @@ struct session* add_account_to_session(struct session* root, struct account_info
             current_session->active = true;
             return root;
         }
+        else
+            current_session = current_session->next_session;
     }
     return NULL;
 }
