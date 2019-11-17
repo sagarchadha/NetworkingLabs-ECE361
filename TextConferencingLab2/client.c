@@ -180,6 +180,27 @@ int main(int argc, char const *argv[])
                 printf("Could not successfully logout %s\n", clientID);
             }
         }
+        else if (strcmp(command, "/quit") == 0 && loggedIn) {
+            struct packet* pack = malloc(sizeof(struct packet));
+            pack->type = EXIT;
+            strcpy(pack->source, clientID);
+            strcpy(pack->data, "0");
+            pack->size = strlen(pack->data);
+
+            send(client_socket, compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+            read(client_socket, message_buffer, MAXLEN); 
+            struct packet* rec_pack = extractPacket(message_buffer);
+
+            if (rec_pack->type == EXIT){
+                printf("%s has successfully logged out\nExiting the application.\n", clientID);
+                loggedIn = false;
+                close(client_socket);
+                break;
+            }
+            else {
+                printf("Could not successfully quit %s\n", clientID);
+            }
+        }
         else {
             printf("Please enter a valid command.\n");
         }

@@ -168,19 +168,6 @@ struct account_info* remove_account(struct account_info* root, char* id) {
     return root;
 }
 
-//Remove all of the sessions associated with an account
-void remove_all_sessions_from_account(struct account_info* account){
-    struct session_id* current_session = account->session_id_list;
-    struct session_id* following_session;
-    
-    while (current_session != NULL) {
-        following_session = current_session->next_session;
-        free(current_session);
-        current_session = following_session;
-    }
-    account->session_id_list = NULL;
-}
-
 struct session* create_session(char* id) {
     struct session* new_session = (struct session*)malloc(sizeof(struct session));
     strcpy(new_session->session_id, id);
@@ -287,6 +274,7 @@ bool remove_account_from_session(struct session* root, char* account_id, char* i
     if (strcmp(current_account->clientID, account_id) == 0) {
         current_session->user_list = current_account->next_account;
         free(current_account);
+        current_session->user_count = current_session->user_count - 1;
         return true;
     }
 
@@ -338,6 +326,21 @@ struct session* remove_session(struct session* root, char* id){
     previous_session->next_session = current_session->next_session;
     free(current_session);
     return root;
+}
+
+//Remove all of the sessions associated with an account
+void remove_all_sessions_from_account(struct session* root, struct account_info* account){
+    struct session_id* current_session = account->session_id_list;
+    struct session_id* following_session;
+    
+    while (current_session != NULL) {
+        following_session = current_session->next_session;
+        if (search_session(root, current_session->session_id)->user_list == NULL)
+            root = remove_session(root, current_session->session_id);
+        free(current_session);
+        current_session = following_session;
+    }
+    account->session_id_list = NULL;
 }
 
 //Print the list of sessions and active users

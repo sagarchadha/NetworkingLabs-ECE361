@@ -52,12 +52,7 @@ int main(int argc, char const *argv[]) {
         exit(EXIT_FAILURE); 
     } 
 
-    // if ((client_socket = accept(server_socket, (struct sockaddr *)&server_address, (socklen_t*)&addrlen)) < 0) { 
-    //     perror("Error: Accept\n"); 
-    //     exit(EXIT_FAILURE); 
-    // } 
-
-    while(command != EXIT){
+    while(true){
         FD_ZERO(&read_fds);
         FD_SET(server_socket, &read_fds);
         max_sd = server_socket;
@@ -136,7 +131,7 @@ int main(int argc, char const *argv[]) {
                 if (command == EXIT){
                     struct account_info* current_account = search_account(account_list, currentPacket->source);
                     remove_account_from_all_sessions(session_list, current_account);
-                    remove_all_sessions_from_account(current_account);
+                    remove_all_sessions_from_account(session_list, current_account);
                     remove_account(account_list, currentPacket->source);
                     
                     struct packet* pack = malloc(sizeof(struct packet));
@@ -145,6 +140,8 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                    close(client_socket);
+                    client_socket_list[i] = 0;
                 }
                 else if (command == NEW_SESS) {
                     struct session* new_session = create_session(currentPacket->data);
@@ -233,7 +230,6 @@ int main(int argc, char const *argv[]) {
             }
         }
     }
-    close(server_socket);
     return 0; 
 } 
 
