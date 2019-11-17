@@ -142,7 +142,6 @@ int main(int argc, char const *argv[])
             }
         }
         else if (strcmp(command, "/list") == 0 && loggedIn) {
-            char* sessionID = strtok(NULL, " ");
             struct packet* pack = malloc(sizeof(struct packet));
             pack->type = QUERY;
             strcpy(pack->source, clientID);
@@ -160,6 +159,27 @@ int main(int argc, char const *argv[])
                 printf("Could not send list of users and sessions\n");
             }
         }
+        else if (strcmp(command, "/logout") == 0 && loggedIn) {
+            struct packet* pack = malloc(sizeof(struct packet));
+            pack->type = EXIT;
+            strcpy(pack->source, clientID);
+            strcpy(pack->data, "0");
+            pack->size = strlen(pack->data);
+
+            send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+            read(client_socket , message_buffer, MAXLEN); 
+            struct packet* rec_pack = extractPacket(message_buffer);
+
+            if (rec_pack->type == EXIT){
+                printf("%s has successfully logged out\n", clientID);
+                loggedIn = false;
+                close(client_socket);
+                continue;
+            }
+            else {
+                printf("Could not successfully logout %s\n", clientID);
+            }
+        }
         else {
             printf("Please enter a valid command.\n");
         }
@@ -167,35 +187,3 @@ int main(int argc, char const *argv[])
     close(client_socket);
     return 0; 
 } 
-
-// int main(int argc, char **argv) {
-
-//   struct sockaddr_in servaddr;
-//   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-//   if (sock == -1) perror("Socket");
-
-//   bzero((void *) &servaddr, sizeof(servaddr));
-//   servaddr.sin_family = AF_INET;
-//   servaddr.sin_port = htons(6782);
-//   servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-//   if (-1 == connect(sock, (struct sockaddr *)&servaddr, sizeof(servaddr)))
-//     perror("Connect");
-
-//   while(1) {
-
-//     char message[6];
-//     fgets(message, 6, stdin);
-
-//     message[5] = '\0';
-
-//     send(sock, message, 6, 0);
-//     read(sock , message, MAXLEN); 
-//     printf("%s", message);
-
-//   }
-
-
-//   close(sock);
-// }

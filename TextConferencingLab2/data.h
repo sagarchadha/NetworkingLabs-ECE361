@@ -144,6 +144,43 @@ bool remove_session_from_account(struct account_info* account, char* id){
     return false;
 }
 
+//Remove an account from the account list
+struct account_info* remove_account(struct account_info* root, char* id) {
+    struct account_info* current_account = root;
+    struct account_info* previous_account;
+
+    if (strcmp(current_account->clientID, id) == 0) {
+        root = current_account->next_account;
+        return root;
+    }
+
+    //Iterate through list and find
+    while (current_account->next_account != NULL){
+        if (strcmp(current_account->clientID, id) == 0){
+            break;
+        }
+        previous_account = current_account;
+        current_account = current_account->next_account;
+    }
+
+    previous_account->next_account = current_account->next_account;
+    free(current_account);
+    return root;
+}
+
+//Remove all of the sessions associated with an account
+void remove_all_sessions_from_account(struct account_info* account){
+    struct session_id* current_session = account->session_id_list;
+    struct session_id* following_session;
+    
+    while (current_session != NULL) {
+        following_session = current_session->next_session;
+        free(current_session);
+        current_session = following_session;
+    }
+    account->session_id_list = NULL;
+}
+
 struct session* create_session(char* id) {
     struct session* new_session = (struct session*)malloc(sizeof(struct session));
     strcpy(new_session->session_id, id);
@@ -266,6 +303,15 @@ bool remove_account_from_session(struct session* root, char* account_id, char* i
         return true;
     }
     return false;
+}
+
+//Remove an account from all of the sessions that they are in
+void remove_account_from_all_sessions(struct session* root, struct account_info* account){
+    struct session_id* current_session = account->session_id_list;
+    while (current_session != NULL) {
+        remove_account_from_session(root, account->clientID, current_session->session_id);
+        current_session = current_session->next_session;
+    }
 }
 
 //Removes an account from the list of users that a session has

@@ -113,7 +113,6 @@ int main(int argc, char const *argv[]) {
                             break;
                         }
                     }
-                    //send(client_socket, "LO_ACK", strlen("LO_ACK"), 0); 
                 }
                 else {
                     struct packet* pack = malloc(sizeof(struct packet));
@@ -122,7 +121,6 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->data, "0");
                     pack->size = 0;
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
-                    // send(client_socket, "LO_NAK", strlen("LO_NAK"), 0); 
                 }
             }
         }
@@ -136,8 +134,17 @@ int main(int argc, char const *argv[]) {
                 command = currentPacket->type;
 
                 if (command == EXIT){
-                    send(client_socket, "EXIT", strlen("EXIT"), 0);
-                    break;
+                    struct account_info* current_account = search_account(account_list, currentPacket->source);
+                    remove_account_from_all_sessions(session_list, current_account);
+                    remove_all_sessions_from_account(current_account);
+                    remove_account(account_list, currentPacket->source);
+                    
+                    struct packet* pack = malloc(sizeof(struct packet));
+                    pack->type = EXIT;
+                    strcpy(pack->source, "Server");
+                    strcpy(pack->data, currentPacket->data);
+                    pack->size = strlen(currentPacket->data);
+                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
                 }
                 else if (command == NEW_SESS) {
                     struct session* new_session = create_session(currentPacket->data);
