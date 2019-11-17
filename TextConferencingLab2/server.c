@@ -128,9 +128,9 @@ int main(int argc, char const *argv[]) {
         }
 
         for (i = 0; i < MAXCLIENTS; ++i){
-            sd = client_socket_list[i];
-            if (FD_ISSET(sd, &read_fds)) {
-                read(client_socket , message_buffer, MAXLEN); 
+            client_socket = client_socket_list[i];
+            if (FD_ISSET(client_socket, &read_fds)) {
+                read(client_socket, message_buffer, MAXLEN); 
                 struct packet* currentPacket = extractPacket(message_buffer);
                 printPacket(currentPacket);
                 command = currentPacket->type;
