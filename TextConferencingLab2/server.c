@@ -6,7 +6,7 @@
 bool find_client(char* clientID_str, char* password_str);
 
 int main(int argc, char const *argv[]) { 
-    int port = 3000;
+    int port = 4095;
     // switch(argc) {
     //     case 2:
     //         port = atoi(argv[1]);
@@ -228,10 +228,15 @@ int main(int argc, char const *argv[]) {
                 }
                 if (command == MESSAGE) {
                     char temp_buffer[MAXLEN];
+                    memset(temp_buffer, 0, MAXLEN);
                     strcpy(temp_buffer, currentPacket->data);
                                 
-                    char session_id[MAXLEN], message[MAXLEN];
-                    sscanf(temp_buffer, "%[^,],%s", session_id, message);
+                    char session_id[MAXLEN];
+                    char message[MAXLEN]; 
+                    memset(session_id, 0, MAXLEN);
+                    memset(message, 0, MAXLEN);
+                    strcpy(session_id, strtok(temp_buffer, " "));
+                    strcpy(message, strtok(NULL, "\n"));
                     
                     struct account_info* receiver_account = search_account(account_list, currentPacket->source);
                     if (!search_session_from_account(receiver_account, session_id)){

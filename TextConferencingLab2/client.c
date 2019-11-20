@@ -23,7 +23,6 @@ int main(int argc, char const *argv[])
     while(1) {
         while (loggedIn) {
             FD_ZERO(&input_fds);
-            //FD_SET(0, &input_fds);
             FD_SET(client_socket, &input_fds);
             int select_num = select(client_socket + 1, &input_fds, NULL, NULL, &timeout);
             if (select_num < 0){
@@ -34,7 +33,6 @@ int main(int argc, char const *argv[])
                 break;
             }
             if (select_num != 0){
-                printf("%d\n", select_num);
                 read(client_socket, message_buffer, MAXLEN); 
                 struct packet* rec_pack = extractPacket(message_buffer);
 
@@ -46,15 +44,14 @@ int main(int argc, char const *argv[])
                 }
             }
         }
-        //if (!loggedIn) {
-            FD_ZERO(&input_fds);
-            FD_SET(0, &input_fds);
+        
+        FD_ZERO(&input_fds);
+        FD_SET(0, &input_fds);
 
-            if (select(0 + 1, &input_fds, NULL, NULL, &timeout) < 0){
-                perror("Error: Select\n"); 
-                exit(EXIT_FAILURE); 
-            }
-        //}
+        if (select(0 + 1, &input_fds, NULL, NULL, &timeout) < 0){
+            perror("Error: Select\n"); 
+            exit(EXIT_FAILURE); 
+        }
 
         if (FD_ISSET(0, &input_fds)){
             fgets(command_buffer, MAXLEN, stdin);
@@ -255,7 +252,7 @@ int main(int argc, char const *argv[])
                 
                 char* temp_buffer = (char*)malloc(1+strlen(session_id)+strlen(message));
                 strcpy(temp_buffer, session_id);
-                strcat(temp_buffer, ",");
+                strcat(temp_buffer, " ");
                 strcat(temp_buffer, message);
                 
                 struct packet* pack = malloc(sizeof(struct packet));

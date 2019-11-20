@@ -79,6 +79,7 @@ bool search_session_from_account(struct account_info* account, char* id){
     while(current_session != NULL){
         if (strcmp(current_session->session_id, id) == 0)
             return true;
+        current_session = current_session->next_session;
     }
     return false;
 }
