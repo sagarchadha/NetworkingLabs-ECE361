@@ -233,8 +233,8 @@ int main(int argc, char const *argv[]) {
                                 
                     char session_id[MAXLEN];
                     char message[MAXLEN]; 
-                    memset(session_id, 0, MAXLEN);
-                    memset(message, 0, MAXLEN);
+                    // memset(session_id, 0, MAXLEN);
+                    // memset(message, 0, MAXLEN);
                     strcpy(session_id, strtok(temp_buffer, " "));
                     strcpy(message, strtok(NULL, "\n"));
                     
@@ -249,11 +249,17 @@ int main(int argc, char const *argv[]) {
                         continue;
                     }
 
+                    memset(temp_buffer, 0, MAXLEN);
+                    strcpy(temp_buffer, "~");
+                    strcat(temp_buffer, session_id);
+                    strcat(temp_buffer, " ");
+                    strcat(temp_buffer, message);
+                    printf("Message: %s\n", temp_buffer);
                     struct packet* pack = malloc(sizeof(struct packet));
                     pack->type = MESSAGE;
                     strcpy(pack->source, "Server");
-                    strcpy(pack->data, message);
-                    pack->size = strlen(message);
+                    strcpy(pack->data, temp_buffer);
+                    pack->size = strlen(temp_buffer);
 
                     struct session* current_session = search_session(session_list, session_id);
                     struct account_info* current_account = current_session->user_list;
@@ -263,6 +269,7 @@ int main(int argc, char const *argv[]) {
                         current_account = current_account->next_account;
                     }
 
+                    pack->type = MESSAGE_ACK;
                     send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0);
                 }
             }

@@ -39,7 +39,7 @@ int main(int argc, char const *argv[])
                 if (rec_pack->type == MESSAGE){
                     printf("%s\n", rec_pack->data);
                 }
-                else {
+                else if (rec_pack->type != MESSAGE_ACK){
                     printf("Could not read the message.\n");
                 }
             }
@@ -243,12 +243,7 @@ int main(int argc, char const *argv[])
             }
             else if (loggedIn) {
                 char* session_id = command;
-                
-                //strcpy(session_id, command);
                 char* message = strtok(NULL, "\n");
-                
-                printf("Session: %s\n", session_id);
-                printf("Message: %s\n", message);
                 
                 char* temp_buffer = (char*)malloc(1+strlen(session_id)+strlen(message));
                 strcpy(temp_buffer, session_id);

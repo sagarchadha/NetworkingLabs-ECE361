@@ -42,7 +42,8 @@ enum msgType {
     QUERY,
     QU_ACK,
     LEAVE_ACK,
-    LEAVE_NAK
+    LEAVE_NAK,
+    MESSAGE_ACK
 };
 
 //Packet contents
