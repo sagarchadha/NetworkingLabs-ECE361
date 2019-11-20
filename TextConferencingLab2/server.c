@@ -76,8 +76,7 @@ int main(int argc, char const *argv[]) {
             } 
 
             read(client_socket , message_buffer, MAXLEN); 
-            struct packet
-            * currentPacket = extractPacket(message_buffer);
+            struct packet* currentPacket = extractPacket(message_buffer);
             printPacket(currentPacket);
             command = currentPacket->type;
 
@@ -90,7 +89,7 @@ int main(int argc, char const *argv[]) {
                 if (find_client(username, password)) {
                     
                     //Add the client into a data structure
-                    struct account_info* new_account = create_account(username, password);
+                    struct account_info* new_account = create_account(username, password, client_socket);
                     account_list = add_to_account_list(account_list, new_account);
                     //print_account_info(account_list);
 
@@ -226,6 +225,40 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->data, list);
                     pack->size = strlen(pack->data);
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                }
+                if (command == MESSAGE) {
+                    char temp_buffer[MAXLEN];
+                    strcpy(temp_buffer, currentPacket->data);
+                                
+                    char session_id[MAXLEN], message[MAXLEN];
+                    sscanf(temp_buffer, "%[^,],%s", session_id, message);
+                    
+                    struct account_info* receiver_account = search_account(account_list, currentPacket->source);
+                    if (!search_session_from_account(receiver_account, session_id)){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = MESSAGE;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "Error: You are not active within that session.");
+                        pack->size = strlen("Error: You are not active within that session.");
+                        send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                        continue;
+                    }
+
+                    struct packet* pack = malloc(sizeof(struct packet));
+                    pack->type = MESSAGE;
+                    strcpy(pack->source, "Server");
+                    strcpy(pack->data, message);
+                    pack->size = strlen(message);
+
+                    struct session* current_session = search_session(session_list, session_id);
+                    struct account_info* current_account = current_session->user_list;
+                    while(current_account != NULL){
+                        if (current_account->clientID != currentPacket->source)
+                            send(current_account->client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
+                        current_account = current_account->next_account;
+                    }
+
+                    send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0);
                 }
             }
         }

@@ -28,6 +28,7 @@ struct account_info{
     bool connected;
     struct account_info* next_account;
     struct session_id* session_id_list;
+    int client_socket;
 };
 
 struct session_id{
@@ -36,13 +37,14 @@ struct session_id{
 };
 
 //Creating the user account
-struct account_info* create_account(char* id, char* p){
+struct account_info* create_account(char* id, char* p, int sd){
     struct account_info* new_account = (struct account_info*)malloc(sizeof(struct account_info));
     strcpy(new_account->clientID,id);
     strcpy(new_account->password, p);
     new_account->connected = false;
     new_account->next_account = NULL;
     new_account->session_id_list = NULL;
+    new_account->client_socket = sd;
     return new_account;
 }
 
@@ -53,6 +55,7 @@ struct account_info* copy_account(struct account_info* old_account) {
     strcpy(new_account->password, old_account->password);
     new_account->connected = old_account->connected;
     new_account->next_account = NULL;
+    new_account->client_socket = old_account->client_socket;
     return new_account;
 }
 
@@ -68,6 +71,16 @@ struct account_info* search_account(struct account_info* root, char* id){
         current_account = current_account->next_account;
     }
     return NULL;
+}
+
+//Check if a user is within a session
+bool search_session_from_account(struct account_info* account, char* id){
+    struct session_id* current_session = account->session_id_list;
+    while(current_session != NULL){
+        if (strcmp(current_session->session_id, id) == 0)
+            return true;
+    }
+    return false;
 }
 
 //Adding a user to the list
