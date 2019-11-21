@@ -134,7 +134,9 @@ void add_session_to_account(struct account_info* account, char* id){
 bool remove_session_from_account(struct account_info* account, char* id){
     struct session_id* current_session = account->session_id_list;
     struct session_id* previous_session;
-    
+
+    if (current_session == NULL) return false;
+
     if (current_session->next_session == NULL && strcmp(current_session->session_id, id) == 0){
         free(current_session);
         account->session_id_list = NULL;

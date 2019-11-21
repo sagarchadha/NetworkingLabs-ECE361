@@ -196,7 +196,7 @@ int main(int argc, char const *argv[])
                     printf("Successfully left session %s\n", sessionID);
                 }
                 else {
-                    printf("Could not successfully leave session %s\n", sessionID);
+                    printf("%s\n", rec_pack->data);
                 }
             }
             else if (strcmp(command, "/list") == 0 && loggedIn) {
@@ -306,7 +306,7 @@ int main(int argc, char const *argv[])
                 struct packet* rec_pack = extractPacket(message_buffer);
 
                 if (rec_pack->type != MESSAGE){
-                    printf("Error with sending the message.\n");
+                    printf("%s\n", rec_pack->data);
                 }
             }
             else {

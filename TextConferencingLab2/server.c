@@ -130,7 +130,7 @@ int main(int argc, char const *argv[]) {
                 if (command == NEW_SESS) {
                     if (search_session(session_list, currentPacket->data) != NULL){
                         struct packet* pack = malloc(sizeof(struct packet));
-                        pack->type = EXIT;
+                        pack->type = NS_NAK;
                         strcpy(pack->source, "Server");
                         strcpy(pack->data, "The session already exists.");
                         pack->size = strlen(currentPacket->data);
@@ -155,7 +155,7 @@ int main(int argc, char const *argv[]) {
                     struct session* current_session = search_session(session_list, currentPacket->data);
                     if (current_session == NULL){
                         struct packet* pack = malloc(sizeof(struct packet));
-                        pack->type = EXIT;
+                        pack->type = JN_NAK;
                         strcpy(pack->source, "Server");
                         strcpy(pack->data, "The session does not exist.");
                         pack->size = strlen(currentPacket->data);
@@ -175,21 +175,33 @@ int main(int argc, char const *argv[]) {
                     send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
                 }
                 else if (command == LEAVE_SESS) {
-                    struct packet* pack = malloc(sizeof(struct packet));
+                    if (search_session(session_list, currentPacket->data) == NULL){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = LEAVE_NAK;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "The session does not exist.");
+                        pack->size = strlen(currentPacket->data);
+                        send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
+                        continue;
+                    }
                     
+                    struct packet* pack = malloc(sizeof(struct packet));
                     struct account_info* account = search_account(account_list, currentPacket->source);
                     if (remove_session_from_account(account, currentPacket->data) &&
-                    remove_account_from_session(session_list, account->clientID, currentPacket->data))
+                    remove_account_from_session(session_list, account->clientID, currentPacket->data)) {
                         pack->type = LEAVE_ACK;
-                    else
+                        strcpy(pack->data, currentPacket->data);
+                    }
+                    else {
                         pack->type = LEAVE_NAK;
+                        strcpy(pack->data, "You are not a part of this session.");
+                    }
 
                     if (search_session(session_list, currentPacket->data)->user_list == NULL)
                         session_list = remove_session(session_list, currentPacket->data);
 
                     strcpy(pack->source, "Server");
-                    strcpy(pack->data, currentPacket->data);
-                    pack->size = strlen(currentPacket->data);
+                    pack->size = strlen(pack->data);
                     send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
                 }
                 else if (command == QUERY) {
@@ -239,14 +251,23 @@ int main(int argc, char const *argv[]) {
 
                     strcpy(session_id, strtok(temp_buffer, " "));
                     strcpy(message, strtok(NULL, "\n"));
-                    
+                    if (search_session(session_list, session_id) == NULL){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = MESSAGE_NAK;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "The session does not exist.");
+                        pack->size = strlen(pack->data);
+                        send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                        continue;
+                    }
+
                     struct account_info* receiver_account = search_account(account_list, currentPacket->source);
                     if (!search_session_from_account(receiver_account, session_id)){
                         struct packet* pack = malloc(sizeof(struct packet));
-                        pack->type = MESSAGE;
+                        pack->type = MESSAGE_NAK;
                         strcpy(pack->source, "Server");
-                        strcpy(pack->data, "You are not active within that session.");
-                        pack->size = strlen("You are not active within that session.");
+                        strcpy(pack->data, "You are not an active user of that session.");
+                        pack->size = strlen(pack->data);
                         send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
                         continue;
                     }
