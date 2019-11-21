@@ -127,22 +127,16 @@ int main(int argc, char const *argv[]) {
                 printPacket(currentPacket);
                 command = currentPacket->type;
 
-                if (command == EXIT){
-                    struct account_info* current_account = search_account(account_list, currentPacket->source);
-                    remove_account_from_all_sessions(session_list, current_account);
-                    remove_all_sessions_from_account(session_list, current_account);
-                    remove_account(account_list, currentPacket->source);
-                    
-                    struct packet* pack = malloc(sizeof(struct packet));
-                    pack->type = EXIT;
-                    strcpy(pack->source, "Server");
-                    strcpy(pack->data, currentPacket->data);
-                    pack->size = strlen(currentPacket->data);
-                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
-                    close(client_socket);
-                    client_socket_list[i] = 0;
-                }
-                else if (command == NEW_SESS) {
+                if (command == NEW_SESS) {
+                    if (search_session(session_list, currentPacket->data) != NULL){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = EXIT;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "The session already exists.");
+                        pack->size = strlen(currentPacket->data);
+                        send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
+                        continue;
+                    }
                     struct session* new_session = create_session(currentPacket->data);
                     session_list = add_to_session_list(session_list, new_session);
                     struct account_info* new_account = search_account(account_list, currentPacket->source);
@@ -155,10 +149,19 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->source, "Server");
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);
-                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                    send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
                 }
                 else if (command == JOIN) {
                     struct session* current_session = search_session(session_list, currentPacket->data);
+                    if (current_session == NULL){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = EXIT;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "The session does not exist.");
+                        pack->size = strlen(currentPacket->data);
+                        send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0);
+                        continue; 
+                    }
                     struct account_info* new_account = search_account(account_list, currentPacket->source);
                     new_account->connected = true;
                     add_session_to_account(new_account, currentPacket->data);
@@ -169,7 +172,7 @@ int main(int argc, char const *argv[]) {
                     strcpy(pack->source, "Server");
                     strcpy(pack->data, currentPacket->data);
                     pack->size = strlen(currentPacket->data);
-                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                    send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
                 }
                 else if (command == LEAVE_SESS) {
                     struct packet* pack = malloc(sizeof(struct packet));
@@ -336,6 +339,21 @@ int main(int argc, char const *argv[]) {
                         add_session_to_account(invited_account, session_id);
                         session_list = add_account_to_session(session_list, invited_account, session_id);
                     }
+                }
+                if (command == EXIT){
+                    struct account_info* current_account = search_account(account_list, currentPacket->source);
+                    remove_account_from_all_sessions(session_list, current_account);
+                    remove_all_sessions_from_account(session_list, current_account);
+                    remove_account(account_list, currentPacket->source);
+                    
+                    struct packet* pack = malloc(sizeof(struct packet));
+                    pack->type = EXIT;
+                    strcpy(pack->source, "Server");
+                    strcpy(pack->data, currentPacket->data);
+                    pack->size = strlen(currentPacket->data);
+                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                    close(client_socket);
+                    client_socket_list[i] = 0;
                 }
             }
         }

@@ -60,9 +60,6 @@ int main(int argc, char const *argv[])
                         }
                     }
                 }
-                else if (rec_pack->type != MESSAGE_ACK){
-                    printf("Could not read the message.\n");
-                }
             }
         }
         
@@ -161,7 +158,7 @@ int main(int argc, char const *argv[])
                     printf("Successfully created session %s\n", sessionID);
                 }
                 else {
-                    printf("Could not successfully create session %s\n", sessionID);
+                    printf("%s\n", rec_pack->data);
                 }
             }
             else if (strcmp(command, "/joinsession") == 0 && loggedIn) {
@@ -180,7 +177,7 @@ int main(int argc, char const *argv[])
                     printf("Successfully joined session %s\n", sessionID);
                 }
                 else {
-                    printf("Could not successfully join session %s\n", sessionID);
+                    printf("%s\n", rec_pack->data);
                 }
             }
             else if (strcmp(command, "/leavesession") == 0 && loggedIn) {
@@ -310,9 +307,6 @@ int main(int argc, char const *argv[])
 
                 if (rec_pack->type != MESSAGE){
                     printf("Error with sending the message.\n");
-                }
-                else{
-                    printf("Successfully sent the message.\n");
                 }
             }
             else {
