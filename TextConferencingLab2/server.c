@@ -207,39 +207,41 @@ int main(int argc, char const *argv[]) {
                 else if (command == QUERY) {
                     char list[MAXLEN];
                     memset(list, 0, MAXLEN);
-                    if ((account_list != NULL) && (session_list != NULL)) {
-                        strcat(list,"Active Users\n");
-                        struct account_info* current_account = account_list;
+                  
+                    strcat(list,"Active Users\n");
+                    struct account_info* current_account = account_list;
 
-                        while (current_account != NULL){
-                            if (current_account->connected) {
-                                strcat(list,current_account->clientID);
-                                strcat(list,"\n");
-                            }
-                            current_account = current_account->next_account;
-                        }
-
-                        strcat(list,"\nActive Sessions\n"); 
-                        struct session* current_session = session_list;
-
+                    while (current_account != NULL){
+                        strcat(list, current_account->clientID);
+                        strcat(list,"\n");
+                        struct session_id* current_session = current_account->session_id_list;
                         while (current_session != NULL){
-                            if (current_session->active) {
-                                strcat(list,current_session->session_id);
-                                strcat(list,"\n");
-                            }
+                            strcat(list, current_session->session_id);
+                            strcat(list, "\n");
                             current_session = current_session->next_session;
                         }
+                        strcat(list, "\n");
+                        current_account = current_account->next_account;
                     }
-                    else {
-                        strcat(list,"No active users or sessions.\n");
-                    }
+
+                    // strcat(list,"\nActive Sessions\n"); 
+                    // struct session* current_session = session_list;
+
+                    // while (current_session != NULL){
+                    //     if (current_session->active) {
+                    //         strcat(list,current_session->session_id);
+                    //         strcat(list,"\n");
+                    //     }
+                    //     strcat(list,"\n");
+                    //     current_session = current_session->next_session;
+                    // }
 
                     struct packet* pack = malloc(sizeof(struct packet));
                     pack->type = QU_ACK;
                     strcpy(pack->source, "Server");
                     strcpy(pack->data, list);
                     pack->size = strlen(pack->data);
-                    send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                    send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
                 }
                 if (command == MESSAGE) {
                     char temp_buffer[MAXLEN];
