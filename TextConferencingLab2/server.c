@@ -233,8 +233,7 @@ int main(int argc, char const *argv[]) {
                                 
                     char session_id[MAXLEN];
                     char message[MAXLEN]; 
-                    // memset(session_id, 0, MAXLEN);
-                    // memset(message, 0, MAXLEN);
+
                     strcpy(session_id, strtok(temp_buffer, " "));
                     strcpy(message, strtok(NULL, "\n"));
                     
@@ -243,8 +242,8 @@ int main(int argc, char const *argv[]) {
                         struct packet* pack = malloc(sizeof(struct packet));
                         pack->type = MESSAGE;
                         strcpy(pack->source, "Server");
-                        strcpy(pack->data, "Error: You are not active within that session.");
-                        pack->size = strlen("Error: You are not active within that session.");
+                        strcpy(pack->data, "You are not active within that session.");
+                        pack->size = strlen("You are not active within that session.");
                         send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
                         continue;
                     }
@@ -271,6 +270,72 @@ int main(int argc, char const *argv[]) {
 
                     pack->type = MESSAGE_ACK;
                     send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0);
+                }
+                if (command == INVITE) {
+                    char temp_buffer[MAXLEN];
+                    memset(temp_buffer, 0, MAXLEN);
+                    strcpy(temp_buffer, currentPacket->data);
+                                
+                    char session_id[MAXLEN];
+                    char user[MAXLEN]; 
+
+                    strcpy(session_id, strtok(temp_buffer, " "));
+                    strcpy(user, strtok(NULL, "\n"));
+                    
+                    struct account_info* invited_account = search_account(account_list, user);
+                    if (invited_account == NULL){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = INVITE_REFUSAL;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "The user does not exist.");
+                        pack->size = strlen("The user does not exist.");
+                        send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                        continue;
+                    }
+
+                    struct session* invited_session = search_session(session_list, session_id);
+                    if (invited_session == NULL){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = INVITE_REFUSAL;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "The session does not exist.");
+                        pack->size = strlen("The session does not exist.");
+                        send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                        continue;
+                    }
+                    
+                    if (search_session_from_account(invited_account, session_id)){
+                        struct packet* pack = malloc(sizeof(struct packet));
+                        pack->type = INVITE_REFUSAL;
+                        strcpy(pack->source, "Server");
+                        strcpy(pack->data, "The user is already registered in that session.");
+                        pack->size = strlen("The user is already registered in that session.");
+                        send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0); 
+                        continue;
+                    }
+
+                    struct packet* pack = malloc(sizeof(struct packet));
+                    pack->type = INVITE;
+                    strcpy(pack->source, currentPacket->source);
+                    
+                    char invite_message[MAXLEN];
+                    strcpy(invite_message, currentPacket->source);
+                    strcat(invite_message, " has sent you an invite to join ");
+                    strcat(invite_message, session_id);
+                    strcat(invite_message, ". Would you like to join? (yes/no)");
+                    strcpy(pack->data, invite_message);
+                    pack->size = strlen(pack->data);
+
+                    send(invited_account->client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
+                    read(invited_account->client_socket, message_buffer, MAXLEN); 
+                    send(client_socket, message_buffer, strlen(message_buffer), 0);
+
+                    struct packet* invitee_packet = extractPacket(message_buffer);
+                    if (invitee_packet->type == INVITE_ACCEPT) {
+                        invited_account->connected = true;
+                        add_session_to_account(invited_account, session_id);
+                        session_list = add_account_to_session(session_list, invited_account, session_id);
+                    }
                 }
             }
         }

@@ -39,6 +39,27 @@ int main(int argc, char const *argv[])
                 if (rec_pack->type == MESSAGE){
                     printf("%s\n", rec_pack->data);
                 }
+                else if (rec_pack->type == INVITE){
+                    while(1){
+                        printf("%s\n", rec_pack->data);
+                        char* invite_Response;
+                        fgets(command_buffer, MAXLEN, stdin);
+                        invite_Response = strtok(command_buffer, "\n");
+                        if (strcmp(invite_Response, "yes\0") == 0) {
+                            strcpy(rec_pack->source, clientID);
+                            rec_pack->type = INVITE_ACCEPT;
+                            send(client_socket, compressPacket(rec_pack), strlen(compressPacket(rec_pack)), 0); 
+                            break;
+                        }
+                        else if (strcmp(invite_Response, "no\0") == 0) {
+                            strcpy(rec_pack->source, clientID);
+                            rec_pack->type = INVITE_REFUSAL;
+                            strcpy(rec_pack->data, "Your invite has been rejected.");
+                            send(client_socket, compressPacket(rec_pack), strlen(compressPacket(rec_pack)), 0); 
+                            break;
+                        }
+                    }
+                }
                 else if (rec_pack->type != MESSAGE_ACK){
                     printf("Could not read the message.\n");
                 }
@@ -110,8 +131,8 @@ int main(int argc, char const *argv[])
                     return -1; 
                 } 
 
-                send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
-                read(client_socket , message_buffer, MAXLEN); 
+                send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
+                read(client_socket, message_buffer, MAXLEN); 
                 struct packet* rec_pack = extractPacket(message_buffer);
 
                 if (rec_pack->type == LO_ACK){
@@ -199,6 +220,7 @@ int main(int argc, char const *argv[])
                     printf("Could not send list of users and sessions\n");
                 }
             }
+            
             else if (strcmp(command, "/logout") == 0 && loggedIn) {
                 struct packet* pack = malloc(sizeof(struct packet));
                 pack->type = EXIT;
@@ -239,6 +261,32 @@ int main(int argc, char const *argv[])
                 }
                 else {
                     printf("Could not successfully quit %s\n", clientID);
+                }
+            }
+            else if (strcmp(command, "/invite") == 0 && loggedIn) {
+                char* session_id = strtok(NULL, " ");
+                char* user = strtok(NULL, "\n");
+                
+                char* temp_buffer = (char*)malloc(1+strlen(session_id)+strlen(user));
+                strcpy(temp_buffer, session_id);
+                strcat(temp_buffer, " ");
+                strcat(temp_buffer, user);
+                
+                struct packet* pack = malloc(sizeof(struct packet));
+                pack->type = INVITE;
+                strcpy(pack->source, clientID);
+                strcpy(pack->data, temp_buffer);
+                pack->size = strlen(pack->data);
+
+                send(client_socket, compressPacket(pack), strlen(compressPacket(pack)), 0); 
+                read(client_socket, message_buffer, MAXLEN); 
+                struct packet* rec_pack = extractPacket(message_buffer);
+
+                if (rec_pack->type == INVITE_ACCEPT){
+                    printf("%s has accepted your invite.\n", rec_pack->source);
+                }
+                else if (rec_pack->type == INVITE_REFUSAL){
+                    printf("%s\n", rec_pack->data);
                 }
             }
             else if (loggedIn) {

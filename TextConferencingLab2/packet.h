@@ -43,7 +43,10 @@ enum msgType {
     QU_ACK,
     LEAVE_ACK,
     LEAVE_NAK,
-    MESSAGE_ACK
+    MESSAGE_ACK,
+    INVITE,
+    INVITE_ACCEPT,
+    INVITE_REFUSAL
 };
 
 //Packet contents
