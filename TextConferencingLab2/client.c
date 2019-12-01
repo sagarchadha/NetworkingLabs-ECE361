@@ -222,7 +222,9 @@ int main(int argc, char const *argv[])
                     printf("%s\n", rec_pack->data);
                 }
             }
+            //Leaving a session command
             else if (strcmp(command, "/leavesession") == 0 && loggedIn) {
+                //Preparing the packet
                 char* sessionID = strtok(NULL, "\n");
                 struct packet* pack = malloc(sizeof(struct packet));
                 pack->type = LEAVE_SESS;
@@ -230,10 +232,14 @@ int main(int argc, char const *argv[])
                 strcpy(pack->data, sessionID);
                 pack->size = strlen(sessionID);
 
+                //Sending the packet to the server
                 send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                
+                //Reading from the server and extracting the packet
                 read(client_socket , message_buffer, MAXLEN); 
                 struct packet* rec_pack = extractPacket(message_buffer);
 
+                //Acknowledgement is sent, user has left the session
                 if (rec_pack->type == LEAVE_ACK){
                     printf("Successfully left session %s\n", sessionID);
                 }
@@ -241,17 +247,23 @@ int main(int argc, char const *argv[])
                     printf("%s\n", rec_pack->data);
                 }
             }
+            //Listing all active users command
             else if (strcmp(command, "/list") == 0 && loggedIn) {
+                //Preparing the packet to send to the server
                 struct packet* pack = malloc(sizeof(struct packet));
                 pack->type = QUERY;
                 strcpy(pack->source, clientID);
                 strcpy(pack->data, "0");
                 pack->size = strlen(pack->data);
 
+                //Sending the packet to the server
                 send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                
+                //Reading the packet and extracting from the server
                 read(client_socket , message_buffer, MAXLEN); 
                 struct packet* rec_pack = extractPacket(message_buffer);
 
+                //Acknowledgement is received, can print all of the users
                 if (rec_pack->type == QU_ACK){
                     printf("%s", rec_pack->data);
                 }
@@ -259,18 +271,23 @@ int main(int argc, char const *argv[])
                     printf("Could not send list of users and sessions\n");
                 }
             }
-            
+            //Logout command
             else if (strcmp(command, "/logout") == 0 && loggedIn) {
+                //Preparing the packet to send to the server
                 struct packet* pack = malloc(sizeof(struct packet));
                 pack->type = EXIT;
                 strcpy(pack->source, clientID);
                 strcpy(pack->data, "0");
                 pack->size = strlen(pack->data);
-
+                
+                //Sending the packet to the server
                 send(client_socket , compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                
+                //Reading from the server and extracting the packet
                 read(client_socket , message_buffer, MAXLEN); 
                 struct packet* rec_pack = extractPacket(message_buffer);
 
+                //Acknowledgement is received, user has logged out
                 if (rec_pack->type == EXIT){
                     printf("%s has successfully logged out\n", clientID);
                     loggedIn = false;
@@ -281,17 +298,23 @@ int main(int argc, char const *argv[])
                     printf("Could not successfully logout %s\n", clientID);
                 }
             }
+            //Quitting the application command
             else if (strcmp(command, "/quit") == 0 && loggedIn) {
+                //Preparing the packet to send to the server
                 struct packet* pack = malloc(sizeof(struct packet));
                 pack->type = EXIT;
                 strcpy(pack->source, clientID);
                 strcpy(pack->data, "0");
                 pack->size = strlen(pack->data);
 
+                //Sending the packet to the server
                 send(client_socket, compressPacket(pack) , strlen(compressPacket(pack)) , 0 ); 
+                
+                //Reading from the server and extracting the packet
                 read(client_socket, message_buffer, MAXLEN); 
                 struct packet* rec_pack = extractPacket(message_buffer);
 
+                //Acknowledgement is received, user had logged out and will exit loop to receive commands
                 if (rec_pack->type == EXIT){
                     printf("%s has successfully logged out\nExiting the application.\n", clientID);
                     loggedIn = false;
