@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <sys/time.h>
+#include <fcntl.h>
 
 #define MAX_SOURCE 64
 #define MAX_DATA 1024
@@ -88,10 +89,12 @@ char * compressPacket(struct packet * pack){
 struct packet * extractPacket(char * packet_str) {
     if (packet_str == NULL) return NULL;
     
-    //Declaring Variables
+    //Creating the packet and temporary string
     struct packet* extracted_Packet = malloc(sizeof(struct packet));
     char buffer[3000];
     strcpy(buffer, packet_str);
+    
+    //Extracting the individual components of the compressed packet
     sscanf(buffer, "%d:%d:%[^:]:%[^:]", &extracted_Packet->type, &extracted_Packet->size, extracted_Packet->source, extracted_Packet->data);
     return extracted_Packet;
 }
